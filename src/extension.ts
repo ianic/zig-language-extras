@@ -2,8 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import * as path from 'path';
 
 let diagnosticCollection: vscode.DiagnosticCollection;
+let output: vscode.OutputChannel;
 
 const buildProblemsRegexp = /(\S.*):(\d*):(\d*): ([^:]*): (.*)/g;
 const singleTestProblemRegexp = /\d+\/\d+\s(.*)\.\.\.\s+(.*[^/]*)(\S.*):(\d*):(\d*):/g;
@@ -13,81 +15,47 @@ const testOutputRegexp = /[.\s]*(\d+)\spassed;\s(\d+)\sskipped;\s(\d+)\sfailed./
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	diagnosticCollection = vscode.languages.createDiagnosticCollection('Zig extras');
-	let output = vscode.window.createOutputChannel("Zig extras");
+	output = vscode.window.createOutputChannel("Zig extras");
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "zig-language-extras" is now active!');
+	context.subscriptions.push(
+		vscode.commands.registerCommand('zig-language-extras.runSingleTest', runSingleTest)
+	);
+}
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('zig-language-extras.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Zig language extras!');
-	});
+function runSingleTest() {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) { return; }
 
-	let runSingleTest = vscode.commands.registerCommand('zig-language-extras.runSingleTest', () => {
-		var path = require("path");
-		const editor = vscode.window.activeTextEditor;
-		if (!editor) { return; }
-		var fileName = editor.document.fileName;
+	const cwd = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath || "";
+	const config = vscode.workspace.getConfiguration('zig');
+	const zigPath = config.get<string>("zigPath") || "zig";
+	const fileName = editor.document.fileName;
+	const fileNameRelative = path.relative(cwd, fileName);
 
-		//output.appendLine("Running test in file " + fileName);
-		const testName = findTest(editor);
-		if (!testName) {
-			output.appendLine("test not found");
-			return;
-		}
-
-		const cwd = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath || "";
-		const config = vscode.workspace.getConfiguration('zig');
-		const zigPath = config.get<string>("zigPath") || "zig";
-		let singleTestArgs: string[] = ["test", "--test-filter", testName, fileName];
-		let buildArgs: string[] = ["test", "--test-no-exec", fileName];
-
-		diagnosticCollection.clear();
-		output.clear();
-
-		output.appendLine("Running: " + zigPath + " " + singleTestArgs.join(" "));
-		let testProcess = cp.execFile(zigPath, singleTestArgs, { cwd }, (err, stdout, stderr) => {
-			if (err) {
-				output.clear();
-				output.appendLine(err?.message);
-				let isTest = testOutputRegexp.exec(stderr);
-				if (isTest) {
-					createSingleTestProblems(stderr, cwd);
-				} else {
-					createBuildProblems(stderr, cwd);
-				}
-			} else {
-				output.appendLine(stderr);
-			}
-		});
-
-		// let buildProcess = cp.execFile(zigPath, buildArgs, { cwd }, (err, stdout, stderr) => {
-		// 	if (err) {
-		// 		output.appendLine(err?.message);
-		// 		createBuildProblems(stderr, cwd);
-		// 		return;
-		// 	}
-		// 	let testProcess = cp.execFile(zigPath, singleTestArgs, { cwd }, (err, stdout, stderr) => {
-		// 		if (err) {
-		// 			output.appendLine(err?.message);
-		// 		} else {
-		// 			output.appendLine("Running: " + zigPath + " " + singleTestArgs.join(" "));
-		// 			output.appendLine(stderr);
-		// 		}
-		// 		createSingleTestProblems(stderr, cwd);
-		// 	});
-		// });
-
+	const testName = findTest(editor);
+	if (!testName) {
+		output.appendLine("Test not found.");
 		output.show(true);
-	});
+		return;
+	}
 
-	context.subscriptions.push(disposable);
-	context.subscriptions.push(runSingleTest);
+	diagnosticCollection.clear();
+	output.clear();
+
+	const singleTestArgs: string[] = ["test", "--test-filter", testName, fileNameRelative];
+	output.appendLine("Running: zig test --test-filter '" + testName + "' " + fileNameRelative);
+	cp.execFile(zigPath, singleTestArgs, { cwd }, (err, stdout, stderr) => {
+		output.appendLine(stderr);
+		if (err) {
+			let isTest = testOutputRegexp.exec(stderr);
+			if (isTest) {
+				createSingleTestProblems(stderr, cwd);
+			} else {
+				createBuildProblems(stderr, cwd);
+			}
+		}
+	});
+	output.show(true);
 }
 
 // Find test name to run. 
@@ -121,36 +89,36 @@ function findTest(editor: vscode.TextEditor) {
 
 function createBuildProblems(stderr: string, cwd: string) {
 	var diagnostics: { [id: string]: vscode.Diagnostic[]; } = {};
-	let regex = /(\S.*):(\d*):(\d*): ([^:]*): (.*)/g;
+	let regex = buildProblemsRegexp;
 
 	for (let match = regex.exec(stderr); match; match = regex.exec(stderr)) {
-		let path = match[1].trim();
-		try {
-			if (!path.includes(cwd)) {
-				path = require("path").resolve(cwd, path);
-			}
-		} catch {
-
-		}
+		let filePath = absolutePath(match[1].trim(), cwd);
 		let line = parseInt(match[2]) - 1;
 		let column = parseInt(match[3]) - 1;
 		let type = match[4];
 		let message = match[5];
-
 		let severity = type.trim().toLowerCase() === "error" ?
 			vscode.DiagnosticSeverity.Error :
 			vscode.DiagnosticSeverity.Information;
-
 		let range = new vscode.Range(line, column, line, Infinity);
 
-		if (diagnostics[path] === undefined) { diagnostics[path] = []; };
-		diagnostics[path].push(new vscode.Diagnostic(range, message, severity));
+		if (diagnostics[filePath] === undefined) { diagnostics[filePath] = []; };
+		diagnostics[filePath].push(new vscode.Diagnostic(range, message, severity));
 	}
 
-	for (let path in diagnostics) {
-		let diagnostic = diagnostics[path];
-		diagnosticCollection.set(vscode.Uri.file(path), diagnostic);
+	for (let filePath in diagnostics) {
+		let diagnostic = diagnostics[filePath];
+		diagnosticCollection.set(vscode.Uri.file(filePath), diagnostic);
 	}
+}
+
+function absolutePath(filePath: string, cwd: string) {
+	try {
+		if (!filePath.includes(cwd)) {
+			filePath = path.resolve(cwd, filePath);
+		}
+	} catch { }
+	return filePath;
 }
 
 function createSingleTestProblems(stderr: string, cwd: string) {
@@ -158,28 +126,20 @@ function createSingleTestProblems(stderr: string, cwd: string) {
 	let regex = singleTestProblemRegexp;
 
 	for (let match = regex.exec(stderr); match; match = regex.exec(stderr)) {
-		let path = match[3].trim();
-		try {
-			if (!path.includes(cwd)) {
-				path = require("path").resolve(cwd, path);
-			}
-		} catch {
-
-		}
+		let filePath = absolutePath(match[3].trim(), cwd);
 		let severity = vscode.DiagnosticSeverity.Error;
 		let line = parseInt(match[4]) - 1;
 		let column = parseInt(match[5]) - 1;
 		let message = match[2].trim();
-
 		let range = new vscode.Range(line, column, line, Infinity);
 
-		if (diagnostics[path] === undefined) { diagnostics[path] = []; };
-		diagnostics[path].push(new vscode.Diagnostic(range, message, severity));
+		if (diagnostics[filePath] === undefined) { diagnostics[filePath] = []; };
+		diagnostics[filePath].push(new vscode.Diagnostic(range, message, severity));
 	}
 
-	for (let path in diagnostics) {
-		let diagnostic = diagnostics[path];
-		diagnosticCollection.set(vscode.Uri.file(path), diagnostic);
+	for (let filePath in diagnostics) {
+		let diagnostic = diagnostics[filePath];
+		diagnosticCollection.set(vscode.Uri.file(filePath), diagnostic);
 	}
 }
 
