@@ -4,13 +4,12 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
 
+import { Diagnostic } from './diagnostic';
+
+
+// globals, set in activate used in other functions
 let diagnosticCollection: vscode.DiagnosticCollection;
 let output: vscode.OutputChannel;
-
-const buildProblemsRegexp = /(\S.*):(\d*):(\d*): ([^:]*): (.*)/g;
-const singleTestProblemRegexp = /\d+\/\d+\s(.*)\.\.\.\s+(.*[^/]*)(\S.*):(\d*):(\d*):/g;
-// Used to test wether the output is build error or test fail error (both have error code == 1).
-const testOutputRegexp = /[.\s]*(\d+)\spassed;\s(\d+)\sskipped;\s(\d+)\sfailed./g;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -51,12 +50,8 @@ function runSingleTest() {
 	cp.execFile(zigPath, singleTestArgs, { cwd }, (err, stdout, stderr) => {
 		output.appendLine(stderr);
 		if (err) {
-			let isTest = testOutputRegexp.exec(stderr);
-			if (isTest) {
-				createSingleTestProblems(stderr, cwd);
-			} else {
-				createBuildProblems(stderr, cwd);
-			}
+			const diagnostic = new Diagnostic(cwd, stderr);
+			diagnostic.createProblems(diagnosticCollection);
 		}
 	});
 	output.show(true);
@@ -80,17 +75,12 @@ function runFileTests() {
 	cp.execFile(zigPath, singleTestArgs, { cwd }, (err, stdout, stderr) => {
 		output.appendLine(stderr);
 		if (err) {
-			let isTest = testOutputRegexp.exec(stderr);
-			if (isTest) {
-				createSingleTestProblems(stderr, cwd);
-			} else {
-				createBuildProblems(stderr, cwd);
-			}
+			const diagnostic = new Diagnostic(cwd, stderr);
+			diagnostic.createProblems(diagnosticCollection);
 		}
 	});
 	output.show(true);
 }
-
 
 // Find test name to run. 
 // Look up from the current line, if not found than
@@ -119,62 +109,6 @@ function findTest(editor: vscode.TextEditor) {
 	}
 
 	return undefined;
-}
-
-function createBuildProblems(stderr: string, cwd: string) {
-	var diagnostics: { [id: string]: vscode.Diagnostic[]; } = {};
-	let regex = buildProblemsRegexp;
-
-	for (let match = regex.exec(stderr); match; match = regex.exec(stderr)) {
-		let filePath = absolutePath(match[1].trim(), cwd);
-		let line = parseInt(match[2]) - 1;
-		let column = parseInt(match[3]) - 1;
-		let type = match[4];
-		let message = match[5];
-		let severity = type.trim().toLowerCase() === "error" ?
-			vscode.DiagnosticSeverity.Error :
-			vscode.DiagnosticSeverity.Information;
-		let range = new vscode.Range(line, column, line, Infinity);
-
-		if (diagnostics[filePath] === undefined) { diagnostics[filePath] = []; };
-		diagnostics[filePath].push(new vscode.Diagnostic(range, message, severity));
-	}
-
-	for (let filePath in diagnostics) {
-		let diagnostic = diagnostics[filePath];
-		diagnosticCollection.set(vscode.Uri.file(filePath), diagnostic);
-	}
-}
-
-function absolutePath(filePath: string, cwd: string) {
-	try {
-		if (!filePath.includes(cwd)) {
-			filePath = path.resolve(cwd, filePath);
-		}
-	} catch { }
-	return filePath;
-}
-
-function createSingleTestProblems(stderr: string, cwd: string) {
-	var diagnostics: { [id: string]: vscode.Diagnostic[]; } = {};
-	let regex = singleTestProblemRegexp;
-
-	for (let match = regex.exec(stderr); match; match = regex.exec(stderr)) {
-		let filePath = absolutePath(match[3].trim(), cwd);
-		let severity = vscode.DiagnosticSeverity.Error;
-		let line = parseInt(match[4]) - 1;
-		let column = parseInt(match[5]) - 1;
-		let message = match[2].trim();
-		let range = new vscode.Range(line, column, line, Infinity);
-
-		if (diagnostics[filePath] === undefined) { diagnostics[filePath] = []; };
-		diagnostics[filePath].push(new vscode.Diagnostic(range, message, severity));
-	}
-
-	for (let filePath in diagnostics) {
-		let diagnostic = diagnostics[filePath];
-		diagnosticCollection.set(vscode.Uri.file(filePath), diagnostic);
-	}
 }
 
 // This method is called when your extension is deactivated
