@@ -13,7 +13,7 @@ output line by line.
 
 
 Add to you keybindings.json something like:
-  ```
+  ```json
     // Zig extras: Run file tests
     {
         "key": "ctrl+j t",
@@ -31,7 +31,7 @@ Add to you keybindings.json something like:
   ### code
 
   Zig command output parser is in [src/diagnostic.ts](src/diagnostic.ts) and the
-  corresponding tests in the [src/tests/suite/extensions.test.ts](src/tests/suite/extensions.test.ts).
+  corresponding tests in the [src/test/suite/extensions.test.ts](src/tests/suite/extensions.test.ts:102).
 
   ### Notes to myself
   [vscode extensions docs](https://code.visualstudio.com/api/get-started/extension-anatomy)   
