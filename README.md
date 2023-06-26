@@ -4,6 +4,11 @@ This extension is adding few commands for Zig development:
   * Zig extras: Run single test
   * Zig extras: Run file tests
 
+Assumes that you are already using
+[vscode-zig](https://github.com/ziglang/vscode-zig) extension. This one uses
+configuration to found Zig binary from that.
+
+
 The main reason I decided to make this is to create fine vscode problems from
 zig command output. When running tests there can be few different versions of
 the output. Build can fail, test can fail, assert can be risen while running the
@@ -33,8 +38,9 @@ Add to you keybindings.json something like:
   Zig command output parser is in [src/diagnostic.ts](src/diagnostic.ts) and the
   corresponding tests in the [src/test/suite/extension.test.ts](src/test/suite/extension.test.ts#L102).
 
+<!--
   ### Notes to myself
   [vscode extensions docs](https://code.visualstudio.com/api/get-started/extension-anatomy)   
-  [extension samples](https://github.com/microsoft/vscode-extension-samples/tree/main)
-
-
+  [extension samples](https://github.com/microsoft/vscode-extension-samples/tree/main)  
+  [publishing extension](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)  
+-->
