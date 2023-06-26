@@ -41,8 +41,7 @@ This command runs single Zig test and outputs test binary to configured location
 debugger launch configuration. Command will run configured launch configuration
 (default ZigDebugTest).
 
-On mac I have installed
-[CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
+On mac I have installed [CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
 extension with launch.json:
 ```json
 {
@@ -58,6 +57,23 @@ extension with launch.json:
     ]
 }
 ```
+On Linux I'm using [Native Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) extension with launch.json:
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ZigDebugTest",
+            "type": "gdb",
+            "request": "launch",
+            "target": "./zig-out/debug/test",
+            "cwd": "${workspaceFolder}",
+        }
+    ]
+}
+```
+
+
 With that I position myself into Zig test and run 'Debug test' command. That
 builds binary and starts debug launch configuration.
 
