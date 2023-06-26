@@ -42,7 +42,7 @@ debugger launch configuration. Command will run configured launch configuration
 (default ZigDebugTest).
 
 On mac I have installed
-CodeLLDB(https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
+[CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
 extension with launch.json:
 ```json
 {
