@@ -2,7 +2,7 @@
   "name": "zig-language-extras",
   "displayName": "Zig Language Extras",
   "description": "Zig commands to help test, ... (and maybe something more in the future)",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "repository": "https://github.com/ianic/zig-language-extras.git",
   "publisher": "ianic",
   "engines": {
@@ -22,12 +22,12 @@
         "zig-language-extras.testBinaryPath": {
           "type": "string",
           "default": "./zig-out/debug/test",
-          "description": "File path to emit binary when running test debug."
+          "description": "File path to emit binary when debugging Zig test."
         },
         "zig-language-extras.debugConfiguration": {
           "type": "string",
           "default": "ZigDebugTest",
-          "description": "Launch configuration name to start when running test debug. Should use binary configured in testBinaryPath config."
+          "description": "Launch configuration name to start when debugging Zig test. Should use binary configured in testBinaryPath config."
         }
       }
     },

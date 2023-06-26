@@ -3,6 +3,7 @@
 This extension is adding few commands for Zig development:
   * Zig extras: Run single test
   * Zig extras: Run file tests
+  * Zig extras: Debug test
 
 Assumes that you are already using
 [vscode-zig](https://github.com/ziglang/vscode-zig) extension. This one uses
@@ -33,10 +34,38 @@ Add to you keybindings.json something like:
     },
   ```
 
-  ### code
+### Debug test
 
-  Zig command output parser is in [src/diagnostic.ts](src/diagnostic.ts) and the
-  corresponding tests in the [src/test/suite/extension.test.ts](src/test/suite/extension.test.ts#L102).
+This command runs single Zig test and outputs test binary to configured location
+(default zig-out/debug/test). You should use that binary as a target for
+debugger launch configuration. Command will run configured launch configuration
+(default ZigDebugTest).
+
+On mac I have installed
+CodeLLDB(https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
+extension with launch.json:
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ZigDebugTest",
+            "type": "lldb",
+            "request": "launch",
+            "program": "./zig-out/debug/test",
+            "cwd": "${workspaceFolder}",
+        }
+    ]
+}
+```
+With that I position myself into Zig test and run 'Debug test' command. That
+builds binary and starts debug launch configuration.
+
+
+### code
+
+Zig command output parser is in [src/diagnostic.ts](src/diagnostic.ts) and the
+corresponding tests in the [src/test/suite/extension.test.ts](src/test/suite/extension.test.ts#L102).
 
 <!--
   ### Notes to myself
