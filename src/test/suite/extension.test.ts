@@ -140,11 +140,32 @@ error: the following test command crashed:
         assert.equal(d.message, "thread 46317125 panic: reached unreachable code");
         assert.equal(d.range.start.line, 41);
     });
+
+    test('Zig build error', () => {
+        const stderr = `main.zig:33:19: error: error is ignored
+main.zig:33:19: note: consider using 'try', 'catch', or 'if'`;
+
+        const diagnostics = parse(stderr);
+        assert.equal(diagnostics.length(), 2);
+    });
+
+    test('Zig success test', () => {
+        const stderr = `1/5 test.simple test... OK
+2/5 test.add 2... OK
+3/5 test.add 3... OK
+4/5 test.deep assert... OK
+5/5 test.simple assert... OK
+All 5 tests passed.`;
+
+        const diagnostics = parse(stderr);
+        assert.equal(diagnostics.length(), 0);
+    });
 });
 
 const testHeader = /^\d+\/\d+\s+test\.([^\.]*)\.\.\.\s+(.*)$/;
 const fileLocation = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+test\.(.*)\s+\(test\)$/;
 const additionalFileLocation = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+(.*)\s+\(test\)$/;
+const buildLine = /^(\S.*):(\d*):(\d*): ([^:]*): (.*)$/;
 
 
 type DiagnosticsMap = { [id: string]: vscode.Diagnostic[]; };
@@ -152,19 +173,54 @@ class Diagnostics {
     map: DiagnosticsMap = {};
 
     length() {
-        return Object.keys(this.map).map((key) => { return this.map[key].length; }).reduce((val, cur) => { return val + cur; });
+        const keys = Object.keys(this.map);
+        if (keys.length === 0) {
+            return 0;
+        }
+        return keys.map((key) => { return this.map[key].length; }).reduce((val, cur) => { return val + cur; });
     }
 
-    push(filePath: string, line: number, column: number, message: string) {
+    push(filePath: string, line: number, column: number, message: string, type: string = "error") {
         let diagnostics = this.map;
         if (diagnostics[filePath] === undefined) { diagnostics[filePath] = []; };
         let range = new vscode.Range(line, column, line, Infinity);
-        let severity = vscode.DiagnosticSeverity.Error;
+
+        let severity = (!type || type.trim().toLowerCase() === "error") ?
+            vscode.DiagnosticSeverity.Error :
+            vscode.DiagnosticSeverity.Information;
         diagnostics[filePath].push(new vscode.Diagnostic(range, message, severity));
     }
 };
 
 function parse(stderr: string) {
+    let diagnostic = parseTestOutput(stderr);
+    if (diagnostic.length() === 0) {
+        return parseBuildOutput(stderr);
+    }
+    return diagnostic;
+}
+
+function parseBuildOutput(stderr: string) {
+    const lines = stderr.split("\n");
+    const linesCount = lines.length;
+    const diagnostics = new Diagnostics();
+
+    for (let i = 0; i < linesCount; i++) {
+        const line = lines[i];
+        let match = line.match(buildLine);
+        if (match) {
+            let path = match[1].trim();
+            let line = parseInt(match[2]) - 1;
+            let column = parseInt(match[3]) - 1;
+            let type = match[4];
+            let message = match[5];
+            diagnostics.push(path, line, column, message, type);
+        }
+    }
+    return diagnostics;
+}
+
+function parseTestOutput(stderr: string) {
     const lines = stderr.split("\n");
     const linesCount = lines.length;
     //var diagnostics: Diagnostics = {};
