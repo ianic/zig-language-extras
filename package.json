@@ -1,13 +1,15 @@
 {
   "name": "zig-language-extras",
-  "displayName": "Zig language extras",
-  "description": "Zig commands to help test, ...",
-  "version": "0.0.1",
+  "displayName": "Zig Language Extras",
+  "description": "Zig commands to help test, ... (and maybe something more in the future)",
+  "version": "0.1.0",
+  "repository": "https://github.com/ianic/zig-language-extras.git",
   "engines": {
     "vscode": "^1.79.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Testing"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
