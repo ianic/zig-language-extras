@@ -15,6 +15,22 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Zig Language Extras",
+      "properties": {
+        "zig-language-extras.testBinaryPath": {
+          "type": "string",
+          "default": "./zig-out/debug/test",
+          "description": "File path to emit binary when running test debug."
+        },
+        "zig-language-extras.debugConfiguration": {
+          "type": "string",
+          "default": "ZigDebugTest",
+          "description": "Launch configuration name to start when running test debug. Should use binary configured in testBinaryPath config."
+        }
+      }
+    },
     "commands": [
       {
         "command": "zig-language-extras.runFileTests",
@@ -23,6 +39,10 @@
       {
         "command": "zig-language-extras.runSingleTest",
         "title": "Zig extras: Run single test"
+      },
+      {
+        "command": "zig-language-extras.debugTest",
+        "title": "Zig extras: Debug test"
       }
     ]
   },
