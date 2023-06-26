@@ -8,12 +8,23 @@ import * as vscode from 'vscode';
 suite('Extension Test Suite', () => {
     vscode.window.showInformationMessage('Start all tests.');
 
+    test('Zig single test', () => {
+        const tc = testCases[4];
+        const filePath = tc.file;
+        const diagnostics = new Diagnostics(tc.cwd, tc.stderr);
+
+        let map = diagnostics.map;
+        assert.equal(diagnostics.length(), 1);
+
+        let d = map[filePath][0];
+        assert.equal(d.message, "expected 2, found 3");
+        assert.equal(d.range.start.line, 28);
+    });
+
     test('Zig test output with failed assert', () => {
         const tc = testCases[3];
         const filePath = tc.file;
         const diagnostics = new Diagnostics(tc.cwd, tc.stderr);
-
-        //console.log(diagnostics);
 
         let map = diagnostics.map;
         assert.equal(diagnostics.length(), 5);
@@ -319,6 +330,20 @@ FAIL (TestExpectedEqual)
 ???:?:?: 0x6060ffffffffffff in ??? (???)
 error: the following test command crashed:
 /Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/baa7aa3e051aa3fed1e3255db2b1f03a/testT`,
+
+        "cwd": "/Users/ianic/code/vscode/zig_extras/test_project",
+        "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
+    },
+    // single test
+    {
+        "stderr": `1/1 test.add 2... expected 2, found 3
+FAIL (TestExpectedEqual)
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:29:5: 0x1009406e3 in test.add 2 (test)
+    try testing.expectEqual(2, 2 + 3);
+    ^
+0 passed; 0 skipped; 1 failed.
+error: the following test command failed with exit code 1:
+/Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/5e395467506bfb2f4e55a73f4998ccea/test`,
 
         "cwd": "/Users/ianic/code/vscode/zig_extras/test_project",
         "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
