@@ -31,7 +31,7 @@ Add to you keybindings.json something like:
   ### code
 
   Zig command output parser is in [src/diagnostic.ts](src/diagnostic.ts) and the
-  corresponding tests in the [src/test/suite/extensions.test.ts](src/test/suite/extensions.test.ts#L102).
+  corresponding tests in the [src/test/suite/extension.test.ts](src/test/suite/extension.test.ts#L102).
 
   ### Notes to myself
   [vscode extensions docs](https://code.visualstudio.com/api/get-started/extension-anatomy)   
