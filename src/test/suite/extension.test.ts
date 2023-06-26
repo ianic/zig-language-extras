@@ -47,8 +47,10 @@ FAIL (TestExpectedEqual)
 ???:?:?: 0x6060ffffffffffff in ??? (???)
 error: the following test command crashed:
 /Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/baa7aa3e051aa3fed1e3255db2b1f03a/testT`;
-        const diagnostics = parse(stderr);
+
         const filePath = "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig";
+        const cwd = "/Users/ianic/code/vscode/zig_extras/test_project";
+        const diagnostics = new Diagnostics(cwd, stderr);
 
         //console.log(diagnostics);
 
@@ -114,7 +116,9 @@ FAIL (TestExpectedEqual)
 error: the following test command crashed:
 /Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/baa7aa3e051aa3fed1e3255db2b1f03a/test`;
         const filePath = "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig";
-        const diagnostics = parse(stderr);
+        const cwd = "/Users/ianic/code/vscode/zig_extras/test_project";
+        const diagnostics = new Diagnostics(cwd, stderr);
+
         assert.equal(diagnostics.length(), 8);
 
         let map = diagnostics.map;
@@ -142,11 +146,24 @@ error: the following test command crashed:
     });
 
     test('Zig build error', () => {
-        const stderr = `main.zig:33:19: error: error is ignored
-main.zig:33:19: note: consider using 'try', 'catch', or 'if'`;
+        const stderr = `src/main.zig:33:19: error: error is ignored
+src/main.zig:33:19: note: consider using 'try', 'catch', or 'if'`;
 
-        const diagnostics = parse(stderr);
+        const filePath = "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig";
+        const cwd = "/Users/ianic/code/vscode/zig_extras/test_project";
+        const diagnostics = new Diagnostics(cwd, stderr);
+
         assert.equal(diagnostics.length(), 2);
+
+        var d = diagnostics.map[filePath][0];
+        assert.equal(d.message, "error is ignored");
+        assert.equal(d.range.start.line, 32);
+        assert.equal(d.severity, vscode.DiagnosticSeverity.Error);
+
+        d = diagnostics.map[filePath][1];
+        assert.equal(d.message, "consider using 'try', 'catch', or 'if'");
+        assert.equal(d.range.start.line, 32);
+        assert.equal(d.severity, vscode.DiagnosticSeverity.Information);
     });
 
     test('Zig success test', () => {
@@ -157,8 +174,10 @@ main.zig:33:19: note: consider using 'try', 'catch', or 'if'`;
 5/5 test.simple assert... OK
 All 5 tests passed.`;
 
-        const diagnostics = parse(stderr);
+        const cwd = "/Users/ianic/code/vscode/zig_extras/test_project";
+        const diagnostics = new Diagnostics(cwd, stderr);
         assert.equal(diagnostics.length(), 0);
+        assert.equal(diagnostics.testsPassed(), true);
     });
 });
 
@@ -166,11 +185,20 @@ const testHeader = /^\d+\/\d+\s+test\.([^\.]*)\.\.\.\s+(.*)$/;
 const fileLocation = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+test\.(.*)\s+\(test\)$/;
 const additionalFileLocation = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+(.*)\s+\(test\)$/;
 const buildLine = /^(\S.*):(\d*):(\d*): ([^:]*): (.*)$/;
+const allTestsPassed = /^All\s+\d+\s+tests\s+passed.$/;
 
 
 type DiagnosticsMap = { [id: string]: vscode.Diagnostic[]; };
 class Diagnostics {
     map: DiagnosticsMap = {};
+    cwd: string;
+    lines: string[];
+
+    constructor(cwd: string, stderr: string) {
+        this.cwd = cwd;
+        this.lines = stderr.split("\n");
+        this.parse();
+    }
 
     length() {
         const keys = Object.keys(this.map);
@@ -181,90 +209,146 @@ class Diagnostics {
     }
 
     push(filePath: string, line: number, column: number, message: string, type: string = "error") {
-        let diagnostics = this.map;
-        if (diagnostics[filePath] === undefined) { diagnostics[filePath] = []; };
+        filePath = this.absolutePath(filePath);
         let range = new vscode.Range(line, column, line, Infinity);
 
         let severity = (!type || type.trim().toLowerCase() === "error") ?
             vscode.DiagnosticSeverity.Error :
             vscode.DiagnosticSeverity.Information;
-        diagnostics[filePath].push(new vscode.Diagnostic(range, message, severity));
+
+        if (this.map[filePath] === undefined) { this.map[filePath] = []; };
+        this.map[filePath].push(new vscode.Diagnostic(range, message, severity));
     }
-};
 
-function parse(stderr: string) {
-    let diagnostic = parseTestOutput(stderr);
-    if (diagnostic.length() === 0) {
-        return parseBuildOutput(stderr);
+    absolutePath(filePath: string) {
+        if (!filePath.includes(this.cwd)) {
+            return require("path").resolve(this.cwd, filePath);
+        }
+        return filePath;
     }
-    return diagnostic;
-}
 
-function parseBuildOutput(stderr: string) {
-    const lines = stderr.split("\n");
-    const linesCount = lines.length;
-    const diagnostics = new Diagnostics();
+    parse() {
+        if (this.lines.length === 0) { return; }
+        if (this.testsPassed()) { return; }
 
-    for (let i = 0; i < linesCount; i++) {
-        const line = lines[i];
-        let match = line.match(buildLine);
-        if (match) {
-            let path = match[1].trim();
-            let line = parseInt(match[2]) - 1;
-            let column = parseInt(match[3]) - 1;
-            let type = match[4];
-            let message = match[5];
-            diagnostics.push(path, line, column, message, type);
+        this.parseTest();
+        if (this.length() === 0) {
+            this.parseBuild();
         }
     }
-    return diagnostics;
-}
 
-function parseTestOutput(stderr: string) {
-    const lines = stderr.split("\n");
-    const linesCount = lines.length;
-    //var diagnostics: Diagnostics = {};
-    const diagnostics = new Diagnostics();
+    testsPassed() {
+        const line = this.lines[this.lines.length - 1];
+        return !!line.match(allTestsPassed);
+    }
 
-    for (let i = 0; i < linesCount; i++) {
-        const line = lines[i];
-        let match = line.match(testHeader);
-        if (match) {
-            const testName = match[1];
-            const message = match[2];
-            if (message !== "OK") {
-                for (let j = i + 1; j < linesCount; j++) {
-                    const fileLine = lines[j];
-                    let fileLineMatch = fileLine.match(fileLocation);
-                    if (fileLineMatch) {
-                        const filePath = fileLineMatch[1];
-                        const line = parseInt(fileLineMatch[2]) - 1;
-                        const column = parseInt(fileLineMatch[3]) - 1;
-                        const fileTestName = fileLineMatch[4];
-                        if (fileTestName === testName) {
-                            //console.log("diagnostic.push", testName, message, filePath, line, column);
-                            diagnostics.push(filePath, line, column, message);
+    parseBuild() {
+        for (let i = 0; i < this.lines.length; i++) {
+            const line = this.lines[i];
+            let match = line.match(buildLine);
+            if (match) {
+                let path = match[1].trim();
+                let line = parseInt(match[2]) - 1;
+                let column = parseInt(match[3]) - 1;
+                let type = match[4];
+                let message = match[5];
+                this.push(path, line, column, message, type);
+            }
+        }
+    }
 
-                            for (let k = i + 1; k < j; k++) {
-                                const additionalFileLine = lines[k];
-                                //if (additionalFileLine.startsWith(filePath)) {
-                                let additionalLineMatch = additionalFileLine.match(additionalFileLocation);
-                                if (additionalLineMatch) {
-                                    const additionalFilePath = additionalLineMatch[1];
-                                    const line = parseInt(additionalLineMatch[2]) - 1;
-                                    const column = parseInt(additionalLineMatch[3]) - 1;
-                                    const functionName = additionalLineMatch[4];
-                                    diagnostics.push(additionalFilePath, line, column, message);
+    parseTest() {
+        const linesCount = this.lines.length;
+
+        for (let i = 0; i < linesCount; i++) {
+            const line = this.lines[i];
+            let match = line.match(testHeader);
+            if (match) {
+                const testName = match[1];
+                const message = match[2];
+                if (message !== "OK") {
+                    for (let j = i + 1; j < linesCount; j++) {
+                        const fileLine = this.lines[j];
+                        let fileLineMatch = fileLine.match(fileLocation);
+                        if (fileLineMatch) {
+                            const filePath = fileLineMatch[1];
+                            const line = parseInt(fileLineMatch[2]) - 1;
+                            const column = parseInt(fileLineMatch[3]) - 1;
+                            const fileTestName = fileLineMatch[4];
+                            if (fileTestName === testName) {
+                                //console.log("diagnostic.push", testName, message, filePath, line, column);
+                                this.push(filePath, line, column, message);
+
+                                for (let k = i + 1; k < j; k++) {
+                                    const additionalFileLine = this.lines[k];
+                                    //if (additionalFileLine.startsWith(filePath)) {
+                                    let additionalLineMatch = additionalFileLine.match(additionalFileLocation);
+                                    if (additionalLineMatch) {
+                                        const additionalFilePath = additionalLineMatch[1];
+                                        const line = parseInt(additionalLineMatch[2]) - 1;
+                                        const column = parseInt(additionalLineMatch[3]) - 1;
+                                        const functionName = additionalLineMatch[4];
+                                        this.push(additionalFilePath, line, column, message);
+                                    }
+                                    //}
                                 }
-                                //}
+                                i = j;
+                                break;
                             }
-                            i = j;
-                            break;
                         }
                     }
                 }
             }
         }
     }
-    return diagnostics;
-}
+};
+
+// 
+// function parseTestOutput(stderr: string) {
+//     const lines = stderr.split("\n");
+//     const linesCount = lines.length;
+//     //var diagnostics: Diagnostics = {};
+//     const diagnostics = new Diagnostics();
+
+//     for (let i = 0; i < linesCount; i++) {
+//         const line = lines[i];
+//         let match = line.match(testHeader);
+//         if (match) {
+//             const testName = match[1];
+//             const message = match[2];
+//             if (message !== "OK") {
+//                 for (let j = i + 1; j < linesCount; j++) {
+//                     const fileLine = lines[j];
+//                     let fileLineMatch = fileLine.match(fileLocation);
+//                     if (fileLineMatch) {
+//                         const filePath = fileLineMatch[1];
+//                         const line = parseInt(fileLineMatch[2]) - 1;
+//                         const column = parseInt(fileLineMatch[3]) - 1;
+//                         const fileTestName = fileLineMatch[4];
+//                         if (fileTestName === testName) {
+//                             //console.log("diagnostic.push", testName, message, filePath, line, column);
+//                             diagnostics.push(filePath, line, column, message);
+
+//                             for (let k = i + 1; k < j; k++) {
+//                                 const additionalFileLine = lines[k];
+//                                 //if (additionalFileLine.startsWith(filePath)) {
+//                                 let additionalLineMatch = additionalFileLine.match(additionalFileLocation);
+//                                 if (additionalLineMatch) {
+//                                     const additionalFilePath = additionalLineMatch[1];
+//                                     const line = parseInt(additionalLineMatch[2]) - 1;
+//                                     const column = parseInt(additionalLineMatch[3]) - 1;
+//                                     const functionName = additionalLineMatch[4];
+//                                     diagnostics.push(additionalFilePath, line, column, message);
+//                                 }
+//                                 //}
+//                             }
+//                             i = j;
+//                             break;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     return diagnostics;
+// }
