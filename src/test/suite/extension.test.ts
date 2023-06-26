@@ -48,21 +48,24 @@ FAIL (TestExpectedEqual)
 error: the following test command crashed:
 /Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/baa7aa3e051aa3fed1e3255db2b1f03a/testT`;
         const diagnostics = parse(stderr);
-
         const filePath = "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig";
-        console.log(diagnostics);
-        assert.equal(Object.keys(diagnostics).length, 1);
-        assert.equal(diagnostics[filePath].length, 3);
 
-        let d = diagnostics[filePath][0];
+        //console.log(diagnostics);
+
+        let map = diagnostics.map;
+        assert.equal(diagnostics.length(), 1);
+        assert.equal(Object.keys(map).length, 1);
+        assert.equal(map[filePath].length, 3);
+
+        let d = map[filePath][0];
         assert.equal(d.message, "expected 4, found 5");
         assert.equal(d.range.start.line, 28);
 
-        d = diagnostics[filePath][1];
+        d = map[filePath][1];
         assert.equal(d.message, "FAIL (TestUnexpectedResult)");
         assert.equal(d.range.start.line, 32);
 
-        d = diagnostics[filePath][2];
+        d = map[filePath][2];
         assert.equal(d.message, "thread 46176743 panic: reached unreachable code");
         assert.equal(d.range.start.line, 37);
     });
@@ -71,35 +74,51 @@ error: the following test command crashed:
 const testHeader = /^\d+\/\d+\s+test\.([^\.]*)\.\.\.\s+(.*)$/;
 const fileLocation = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+test\.(.*)\s+\(test\)$/;
 
-type Diagnostics = { [id: string]: vscode.Diagnostic[]; };
+
+type DiagnosticsMap = { [id: string]: vscode.Diagnostic[]; };
+class Diagnostics {
+    map: DiagnosticsMap = {};
+
+    length() {
+        return Object.keys(this.map).length;
+    }
+
+    push(filePath: string, line: number, column: number, message: string) {
+        let diagnostics = this.map;
+        if (diagnostics[filePath] === undefined) { diagnostics[filePath] = []; };
+        let range = new vscode.Range(line, column, line, Infinity);
+        let severity = vscode.DiagnosticSeverity.Error;
+        diagnostics[filePath].push(new vscode.Diagnostic(range, message, severity));
+    }
+};
 
 function parse(stderr: string) {
     const lines = stderr.split("\n");
     const linesCount = lines.length;
-    var diagnostics: Diagnostics = {};
+    //var diagnostics: Diagnostics = {};
+    const diagnostics = new Diagnostics();
 
     for (let i = 0; i < linesCount; i++) {
         const line = lines[i];
-        let m = line.match(testHeader);
-        if (m) {
-            const testName = m[1];
-            const message = m[2];
+        let match = line.match(testHeader);
+        if (match) {
+            const testName = match[1];
+            const message = match[2];
             if (message !== "OK") {
                 for (let j = i + 1; j < linesCount; j++) {
                     const fileLine = lines[j];
-                    let flm = fileLine.match(fileLocation);
-                    if (flm) {
-                        const filePath = flm[1];
-                        const fileLine = parseInt(flm[2]) - 1;
-                        const fileColumn = parseInt(flm[3]) - 1;
-                        const fileTestName = flm[4];
+                    let fileLineMatch = fileLine.match(fileLocation);
+                    if (fileLineMatch) {
+                        const filePath = fileLineMatch[1];
+                        const fileLine = parseInt(fileLineMatch[2]) - 1;
+                        const fileColumn = parseInt(fileLineMatch[3]) - 1;
+                        const fileTestName = fileLineMatch[4];
                         if (fileTestName === testName) {
-                            console.log(testName, message, filePath, fileLine, fileColumn);
+                            console.log("diagnostic.push", testName, message, filePath, fileLine, fileColumn);
+                            diagnostics.push(filePath, fileLine, fileColumn, message);
 
-                            if (diagnostics[filePath] === undefined) { diagnostics[filePath] = []; };
-                            let range = new vscode.Range(fileLine, fileColumn, fileLine, Infinity);
-                            let severity = vscode.DiagnosticSeverity.Error;
-                            diagnostics[filePath].push(new vscode.Diagnostic(range, message, severity));
+                            i = j;
+                            break;
                         }
                     }
                 }
