@@ -9,6 +9,7 @@ let output: vscode.OutputChannel;
 
 const buildProblemsRegexp = /(\S.*):(\d*):(\d*): ([^:]*): (.*)/g;
 const singleTestProblemRegexp = /\d+\/\d+\s(.*)\.\.\.\s+(.*[^/]*)(\S.*):(\d*):(\d*):/g;
+// Used to test wether the output is build error or test fail error (both have error code == 1).
 const testOutputRegexp = /[.\s]*(\d+)\spassed;\s(\d+)\sskipped;\s(\d+)\sfailed./g;
 
 // This method is called when your extension is activated
@@ -19,6 +20,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('zig-language-extras.runSingleTest', runSingleTest)
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('zig-language-extras.runFileTests', runFileTests)
 	);
 }
 
@@ -57,6 +61,36 @@ function runSingleTest() {
 	});
 	output.show(true);
 }
+
+function runFileTests() {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) { return; }
+
+	const cwd = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath || "";
+	const config = vscode.workspace.getConfiguration('zig');
+	const zigPath = config.get<string>("zigPath") || "zig";
+	const fileName = editor.document.fileName;
+	const fileNameRelative = path.relative(cwd, fileName);
+
+	diagnosticCollection.clear();
+	output.clear();
+
+	const singleTestArgs: string[] = ["test", fileNameRelative];
+	output.appendLine("Running: zig test " + fileNameRelative);
+	cp.execFile(zigPath, singleTestArgs, { cwd }, (err, stdout, stderr) => {
+		output.appendLine(stderr);
+		if (err) {
+			let isTest = testOutputRegexp.exec(stderr);
+			if (isTest) {
+				createSingleTestProblems(stderr, cwd);
+			} else {
+				createBuildProblems(stderr, cwd);
+			}
+		}
+	});
+	output.show(true);
+}
+
 
 // Find test name to run. 
 // Look up from the current line, if not found than

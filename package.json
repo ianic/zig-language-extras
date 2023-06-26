@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "zig-language-extras.helloWorld",
-        "title": "Hello World"
+        "command": "zig-language-extras.runFileTests",
+        "title": "Zig extras: Run file tests"
       },
       {
         "command": "zig-language-extras.runSingleTest",
