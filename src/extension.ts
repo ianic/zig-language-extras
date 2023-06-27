@@ -28,117 +28,113 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 }
 
+function debugTest() {
+	output.clear();
+	output.show(true);
+
+	const env = getEnv();
+	if (!env) { return; }
+	if (!env || !env.testName) { return; }
+
+	const debugEnv = getDebugEnv();
+
+	mkdirp(path.resolve(env.cwd, debugEnv.testBinaryPath)); // ensure that output directory exists
+
+	const args: string[] = ["test", "--test-filter", env.testName, env.fileNameRelative, "-femit-bin=" + debugEnv.testBinaryPath];
+	runZig(args, env.cwd, () => {
+		output.appendLine("Starting launch configuration '" + debugEnv.launchConfiguration + "'");
+		vscode.debug.startDebugging(env.workspaceFolder, debugEnv.launchConfiguration);
+	});
+}
+
+function runSingleTest() {
+	output.clear();
+	output.show(true);
+
+	const env = getEnv();
+	if (!env || !env.testName) { return; }
+
+	const args: string[] = ["test", "--test-filter", env.testName, env.fileNameRelative];
+	runZig(args, env.cwd);
+}
+
+function runFileTests() {
+	output.clear();
+	output.show(true);
+
+	const env = getEnv(false);
+	if (!env) { return; }
+
+	const args: string[] = ["test", env.fileNameRelative];
+	runZig(args, env.cwd);
+}
+
 // path for debug binary relative to the workspace root
 const defaultTestBinaryPath = "./zig-out/debug/test";
-const defaultDebugConfiguration = "ZigDebugTest";
+const defaultDebugLaunchConfiguration = "ZigDebugTest";
 
-function debugTest() {
+function getDebugEnv() {
+	const config = vscode.workspace.getConfiguration('zig-language-extras');
+	return {
+		testBinaryPath: config.get<string>("testBinaryPath") || defaultTestBinaryPath,
+		launchConfiguration: config.get<string>("debugLaunchConfiguration") || defaultDebugLaunchConfiguration,
+	};
+}
+
+function getEnv(findCurrentTest: boolean = true) {
 	const editor = vscode.window.activeTextEditor;
-	if (!editor) { return; }
-
-	const cwd = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath || "";
-	const zigConfig = vscode.workspace.getConfiguration('zig');
-	const zigPath = zigConfig.get<string>("zigPath") || "zig";
-	const fileName = editor.document.fileName;
-	const fileNameRelative = path.relative(cwd, fileName);
-
-	const testName = findTest(editor);
-	if (!testName) {
-		output.appendLine("Test not found.");
-		output.show(true);
-		return;
+	if (!editor) {
+		output.appendLine("No active text editor found!");
+		return undefined;
 	}
 
-	const config = vscode.workspace.getConfiguration('zig-language-extras');
-	const testBinaryPath = config.get<string>("testBinaryPath") || defaultTestBinaryPath;
-	const debugConfiguration = config.get<string>("debugConfiguration") || defaultDebugConfiguration;
+	const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+	if (!workspaceFolder) {
+		output.appendLine("No workspace folder found!");
+		return undefined;
+	}
+	const cwd = workspaceFolder.uri.fsPath || "";
+	const fileName = editor.document.fileName;
+	const fileNameRelative = path.relative(cwd, fileName);
+	const testName = findCurrentTest ? findTest(editor) : undefined;
 
+	if (findCurrentTest && !testName) {
+		output.appendLine("Current test not found!");
+	}
+
+	return {
+		editor: editor,
+		workspaceFolder: workspaceFolder,
+		cwd: cwd,
+		fileName: fileName,
+		fileNameRelative: fileNameRelative,
+		testName: testName,
+	};
+}
+
+// run zig binary with args 
+function runZig(args: string[], cwd: string, successCallback?: () => void) {
 	diagnosticCollection.clear();
-	output.clear();
 
-	mkdirp(path.resolve(cwd, testBinaryPath));
+	// get zig binary from zig extension configuration
+	const zigConfig = vscode.workspace.getConfiguration('zig');
+	const zigPath = zigConfig.get<string>("zigPath") || "zig";
 
-	const args: string[] = ["test", "--test-filter", testName, fileNameRelative, "-femit-bin=" + testBinaryPath];
-	output.appendLine("Running: zig test --test-filter '" + testName + "' " + fileNameRelative + " -femit-bin=" + testBinaryPath);
+	// show running command in output (so can be analyzed or copied to terminal)
+	output.appendLine("Running: zig " + quote(args).join(' '));
 	output.appendLine(""); // empty line
+
 	cp.execFile(zigPath, args, { cwd }, (err, stdout, stderr) => {
 		output.appendLine(stderr);
 		if (err) {
 			const diagnostic = new Diagnostic(cwd, stderr);
 			diagnostic.createProblems(diagnosticCollection);
 		} else {
-			output.appendLine("Starting launch configuration '" + debugConfiguration + "'");
-			vscode.debug.startDebugging(vscode.workspace.getWorkspaceFolder(editor.document.uri), debugConfiguration);
+			if (successCallback) {
+				successCallback();
+			}
 		}
 	});
-	output.show(true);
-}
-
-function mkdirp(filePath: string) {
-	console.log("mkdirp filePath", filePath);
-	var dir = path.dirname(filePath);
-	console.log("mkdirp dir", dir);
-
-	if (!fs.existsSync(dir)) {
-		fs.mkdirSync(dir, { recursive: true });
-	}
-}
-
-function runSingleTest() {
-	const editor = vscode.window.activeTextEditor;
-	if (!editor) { return; }
-
-	const cwd = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath || "";
-	const config = vscode.workspace.getConfiguration('zig');
-	const zigPath = config.get<string>("zigPath") || "zig";
-	const fileName = editor.document.fileName;
-	const fileNameRelative = path.relative(cwd, fileName);
-
-	const testName = findTest(editor);
-	if (!testName) {
-		output.appendLine("Test not found.");
-		output.show(true);
-		return;
-	}
-
-	diagnosticCollection.clear();
-	output.clear();
-
-	const singleTestArgs: string[] = ["test", "--test-filter", testName, fileNameRelative];
-	output.appendLine("Running: zig test --test-filter '" + testName + "' " + fileNameRelative);
-	cp.execFile(zigPath, singleTestArgs, { cwd }, (err, stdout, stderr) => {
-		output.appendLine(stderr);
-		if (err) {
-			const diagnostic = new Diagnostic(cwd, stderr);
-			diagnostic.createProblems(diagnosticCollection);
-		}
-	});
-	output.show(true);
-}
-
-function runFileTests() {
-	const editor = vscode.window.activeTextEditor;
-	if (!editor) { return; }
-
-	const cwd = vscode.workspace.getWorkspaceFolder(editor.document.uri)?.uri.fsPath || "";
-	const config = vscode.workspace.getConfiguration('zig');
-	const zigPath = config.get<string>("zigPath") || "zig";
-	const fileName = editor.document.fileName;
-	const fileNameRelative = path.relative(cwd, fileName);
-
-	diagnosticCollection.clear();
-	output.clear();
-
-	const singleTestArgs: string[] = ["test", fileNameRelative];
-	output.appendLine("Running: zig test " + fileNameRelative);
-	cp.execFile(zigPath, singleTestArgs, { cwd }, (err, stdout, stderr) => {
-		output.appendLine(stderr);
-		if (err) {
-			const diagnostic = new Diagnostic(cwd, stderr);
-			diagnostic.createProblems(diagnosticCollection);
-		}
-	});
-	output.show(true);
 }
 
 // Find test name to run. 
@@ -168,6 +164,24 @@ function findTest(editor: vscode.TextEditor) {
 	}
 
 	return undefined;
+}
+
+
+// quote arg if it contains space
+function quote(args: string[]) {
+	return args.map((arg) => {
+		return (arg.indexOf(' ') >= 0) ? '"' + arg + '"' : arg;
+	});
+}
+
+function mkdirp(filePath: string) {
+	console.log("mkdirp filePath", filePath);
+	var dir = path.dirname(filePath);
+	console.log("mkdirp dir", dir);
+
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir, { recursive: true });
+	}
 }
 
 // This method is called when your extension is deactivated
