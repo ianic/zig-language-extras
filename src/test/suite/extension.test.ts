@@ -38,7 +38,7 @@ suite('Extension Test Suite', () => {
         assert.equal(d.range.start.line, 32);
 
         d = map[filePath][2];
-        assert.equal(d.message, "thread 46176743 panic: reached unreachable code");
+        assert.equal(d.message, "panic: reached unreachable code");
         assert.equal(d.range.start.line, 37);
     });
 
@@ -59,17 +59,17 @@ suite('Extension Test Suite', () => {
         assert.equal(d.range.start.line, 32);
 
         d = map[filePath][2];
-        assert.equal(d.message, "thread 46317125 panic: reached unreachable code");
+        assert.equal(d.message, "panic: reached unreachable code");
         assert.equal(d.range.start.line, 37);
 
         d = map[filePath][3];
-        assert.equal(d.message, "thread 46317125 panic: reached unreachable code");
+        assert.equal(d.message, "panic: reached unreachable code");
         assert.equal(d.range.start.line, 49);
         d = map[filePath][4];
-        assert.equal(d.message, "thread 46317125 panic: reached unreachable code");
+        assert.equal(d.message, "panic: reached unreachable code");
         assert.equal(d.range.start.line, 45);
         d = map[filePath][5];
-        assert.equal(d.message, "thread 46317125 panic: reached unreachable code");
+        assert.equal(d.message, "panic: reached unreachable code");
         assert.equal(d.range.start.line, 41);
     });
 
@@ -96,6 +96,19 @@ suite('Extension Test Suite', () => {
         const diagnostic = new Diagnostic(tc.cwd, tc.stderr);
         assert.equal(diagnostic.length(), 0);
         assert.equal(diagnostic.testsPassed(), true);
+    });
+
+    test('Zig build test with assert failed', () => {
+        const tc = testCases[5];
+        const diagnostic = new Diagnostic(tc.cwd, tc.stderr);
+        assert.equal(diagnostic.length(), 8);
+
+        var fd = diagnostic.map[tc.file];
+        assert.equal(fd.length, 4);
+        fd.forEach((d) => {
+            assert.equal(d.message, "panic: reached unreachable code");
+            assert.equal(d.severity, Severity.Error);
+        });
     });
 });
 
@@ -220,6 +233,47 @@ error: the following test command failed with exit code 1:
 
         "cwd": "/Users/ianic/code/vscode/zig_extras/test_project",
         "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
-    }
+    },
+    // zig build test
+    {
+        stderr: `run test: error: thread 48065683 panic: reached unreachable code
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/debug.zig:286:14: 0x104ff0f8f in assert (test)
+    if (!ok) unreachable; // assertion failure
+             ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:51:21: 0x10502d2e3 in third (test)
+    std.debug.assert(false);
+                    ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:46:10: 0x104ff9127 in second (test)
+    third();
+         ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:42:11: 0x104fed0ef in first (test)
+    second();
+          ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:38:10: 0x104fed0d7 in test.deep assert (test)
+    first();
+         ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/test_runner.zig:102:29: 0x104ff2d1b in mainServer (test)
+                test_fn.func() catch |err| switch (err) {
+                            ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/test_runner.zig:36:26: 0x104ff3f1f in main (test)
+        return mainServer() catch @panic("internal test runner failure");
+                         ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/start.zig:599:22: 0x104ff4bbb in main (test)
+            root.main();
+                     ^
+???:?:?: 0x18ad1bf27 in ??? (???)
+???:?:?: 0xbf597fffffffffff in ??? (???)
+run test: error: while executing test 'test.deep assert', the following command terminated with signal 6 (expected exited with code 0):
+/Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/c1a4dbaec5e49f22f351b2537eac8d89/test --listen=- 
+Build Summary: 1/3 steps succeeded; 1 failed; 5/5 tests passed (disable with -fno-summary)
+test transitive failure
++- run test failure
+   +- zig test Debug native success 592ms MaxRSS:152M
+error: the following build command failed with exit code 1:
+/Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/e14ec7ddb426b4447b67446ba65e7dab/build /usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/zig /Users/ianic/code/vscode/zig_extras/test_project /Users/ianic/code/vscode/zig_extras/test_project/zig-cache /Users/ianic/.cache/zig test
+`,
+        "cwd": "/Users/ianic/code/vscode/zig_extras/test_project",
+        "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
+    },
 
 ];

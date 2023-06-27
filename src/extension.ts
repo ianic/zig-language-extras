@@ -26,12 +26,31 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('zig-language-extras.debugTest', debugTest)
 	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('zig-language-extras.buildWorkspace', buildWorkspace)
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('zig-language-extras.testWorkspace', testWorkspace)
+	);
+}
+
+function testWorkspace() {
+	const env = getEnv(false);
+	if (!env) { return; }
+
+	const args: string[] = ["build", "test"];
+	runZig(args, env.cwd);
+}
+
+function buildWorkspace() {
+	const env = getEnv(false);
+	if (!env) { return; }
+
+	const args: string[] = ["build"];
+	runZig(args, env.cwd);
 }
 
 function debugTest() {
-	output.clear();
-	output.show(true);
-
 	const env = getEnv();
 	if (!env) { return; }
 	if (!env || !env.testName) { return; }
@@ -48,9 +67,6 @@ function debugTest() {
 }
 
 function runSingleTest() {
-	output.clear();
-	output.show(true);
-
 	const env = getEnv();
 	if (!env || !env.testName) { return; }
 
@@ -59,9 +75,6 @@ function runSingleTest() {
 }
 
 function runFileTests() {
-	output.clear();
-	output.show(true);
-
 	const env = getEnv(false);
 	if (!env) { return; }
 
@@ -82,6 +95,9 @@ function getDebugEnv() {
 }
 
 function getEnv(findCurrentTest: boolean = true) {
+	output.clear();
+	output.show(true);
+
 	const editor = vscode.window.activeTextEditor;
 	if (!editor) {
 		output.appendLine("No active text editor found!");
@@ -122,10 +138,14 @@ function runZig(args: string[], cwd: string, successCallback?: () => void) {
 
 	// show running command in output (so can be analyzed or copied to terminal)
 	output.appendLine("Running: zig " + quote(args).join(' '));
-	output.appendLine(""); // empty line
 
 	cp.execFile(zigPath, args, { cwd }, (err, stdout, stderr) => {
-		output.appendLine(stderr);
+		if (stderr.trim().length > 0) {
+			output.appendLine(""); // empty line
+			output.appendLine(stderr);
+		} else {
+			if (!err) { output.appendLine("OK"); }
+		}
 		if (err) {
 			const diagnostic = new Diagnostic(cwd, stderr);
 			diagnostic.createProblems(diagnosticCollection);
@@ -165,7 +185,6 @@ function findTest(editor: vscode.TextEditor) {
 
 	return undefined;
 }
-
 
 // quote arg if it contains space
 function quote(args: string[]) {
