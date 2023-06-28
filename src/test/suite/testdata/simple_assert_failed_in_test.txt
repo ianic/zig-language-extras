@@ -1,0 +1,33 @@
+1/5 test.simple test... OK
+2/5 test.add 2... expected 4, found 5
+FAIL (TestExpectedEqual)
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:29:5: 0x102044ec3 in test.add 2 (test)
+    try testing.expectEqual(4, 2 + 3);
+    ^
+3/5 test.add 3... FAIL (TestUnexpectedResult)
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/testing.zig:509:14: 0x102045017 in expect (test)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:33:5: 0x102045073 in test.add 3 (test)
+    try testing.expect(4 == 3 + 3);
+    ^
+4/5 test.simple assert... thread 46176743 panic: reached unreachable code
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/debug.zig:286:14: 0x10204513b in assert (test)
+    if (!ok) unreachable; // assertion failure
+             ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:38:21: 0x1020450eb in test.simple assert (test)
+    std.debug.assert(false);
+                    ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/test_runner.zig:178:28: 0x10204c4e3 in mainTerminal (test)
+        } else test_fn.func();
+                           ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/test_runner.zig:38:28: 0x10204bfe7 in main (test)
+        return mainTerminal();
+                           ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/start.zig:599:22: 0x10204cc6f in main (test)
+            root.main();
+                     ^
+???:?:?: 0x18ad1bf27 in ??? (???)
+???:?:?: 0x6060ffffffffffff in ??? (???)
+error: the following test command crashed:
+/Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/baa7aa3e051aa3fed1e3255db2b1f03a/test

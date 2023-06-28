@@ -1,0 +1,2 @@
+src/main.zig:33:19: error: error is ignored
+src/main.zig:33:19: note: consider using 'try', 'catch', or 'if'

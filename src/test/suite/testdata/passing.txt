@@ -1,0 +1,6 @@
+1/5 test.simple test... OK
+2/5 test.add 2... OK
+3/5 test.add 3... OK
+4/5 test.deep assert... OK
+5/5 test.simple assert... OK
+All 5 tests passed.

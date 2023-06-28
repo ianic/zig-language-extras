@@ -1,0 +1,35 @@
+run test: error: thread 48065683 panic: reached unreachable code
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/debug.zig:286:14: 0x104ff0f8f in assert (test)
+    if (!ok) unreachable; // assertion failure
+             ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:51:21: 0x10502d2e3 in third (test)
+    std.debug.assert(false);
+                    ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:46:10: 0x104ff9127 in second (test)
+    third();
+         ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:42:11: 0x104fed0ef in first (test)
+    second();
+          ^
+/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:38:10: 0x104fed0d7 in test.deep assert (test)
+    first();
+         ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/test_runner.zig:102:29: 0x104ff2d1b in mainServer (test)
+                test_fn.func() catch |err| switch (err) {
+                            ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/test_runner.zig:36:26: 0x104ff3f1f in main (test)
+        return mainServer() catch @panic("internal test runner failure");
+                         ^
+/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/start.zig:599:22: 0x104ff4bbb in main (test)
+            root.main();
+                     ^
+???:?:?: 0x18ad1bf27 in ??? (???)
+???:?:?: 0xbf597fffffffffff in ??? (???)
+run test: error: while executing test 'test.deep assert', the following command terminated with signal 6 (expected exited with code 0):
+/Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/c1a4dbaec5e49f22f351b2537eac8d89/test --listen=- 
+Build Summary: 1/3 steps succeeded; 1 failed; 5/5 tests passed (disable with -fno-summary)
+test transitive failure
++- run test failure
+   +- zig test Debug native success 592ms MaxRSS:152M
+error: the following build command failed with exit code 1:
+/Users/ianic/code/vscode/zig_extras/test_project/zig-cache/o/e14ec7ddb426b4447b67446ba65e7dab/build /usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/zig /Users/ianic/code/vscode/zig_extras/test_project /Users/ianic/code/vscode/zig_extras/test_project/zig-cache /Users/ianic/.cache/zig test

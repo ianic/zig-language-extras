@@ -1,0 +1,16 @@
+[
+  {
+    "file": "/project/root/src/main.zig",
+    "line": 32,
+    "column": 18,
+    "message": "error is ignored",
+    "severity": 0
+  },
+  {
+    "file": "/project/root/src/main.zig",
+    "line": 32,
+    "column": 18,
+    "message": "consider using 'try', 'catch', or 'if'",
+    "severity": 3
+  }
+]

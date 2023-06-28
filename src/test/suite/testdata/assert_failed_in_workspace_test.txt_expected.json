@@ -1,0 +1,58 @@
+[
+  {
+    "file": "/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/debug.zig",
+    "line": 285,
+    "column": 13,
+    "message": "thread 48065683 panic: reached unreachable code",
+    "severity": 0
+  },
+  {
+    "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
+    "line": 50,
+    "column": 20,
+    "message": "thread 48065683 panic: reached unreachable code",
+    "severity": 0
+  },
+  {
+    "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
+    "line": 45,
+    "column": 9,
+    "message": "thread 48065683 panic: reached unreachable code",
+    "severity": 0
+  },
+  {
+    "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
+    "line": 41,
+    "column": 10,
+    "message": "thread 48065683 panic: reached unreachable code",
+    "severity": 0
+  },
+  {
+    "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
+    "line": 37,
+    "column": 9,
+    "message": "thread 48065683 panic: reached unreachable code",
+    "severity": 0
+  },
+  {
+    "file": "/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/test_runner.zig",
+    "line": 101,
+    "column": 28,
+    "message": "thread 48065683 panic: reached unreachable code",
+    "severity": 0
+  },
+  {
+    "file": "/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/test_runner.zig",
+    "line": 35,
+    "column": 25,
+    "message": "thread 48065683 panic: reached unreachable code",
+    "severity": 0
+  },
+  {
+    "file": "/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/start.zig",
+    "line": 598,
+    "column": 21,
+    "message": "thread 48065683 panic: reached unreachable code",
+    "severity": 0
+  }
+]

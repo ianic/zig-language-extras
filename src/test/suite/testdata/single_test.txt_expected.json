@@ -1,0 +1,9 @@
+[
+  {
+    "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
+    "line": 28,
+    "column": 4,
+    "message": "expected 2, found 3",
+    "severity": 0
+  }
+]
