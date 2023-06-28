@@ -34,7 +34,7 @@ export class Parser {
 
     constructor(cwd: string, stderr: string) {
         this.cwd = cwd;
-        this.lines = stderr.split("\n");
+        this.lines = stderr.split(/[\r\n]+/);
         this.problems = [];
         this.parse();
     }
@@ -60,7 +60,7 @@ export class Parser {
     private absolutePath(filePath: string) {
         if (!this.cwd || path.isAbsolute(filePath) || !path.isAbsolute(this.cwd)) { return filePath; }
         return path.resolve(this.cwd, filePath);
-    }
+    } P
 
     parse() {
         if (this.lines.length === 0) { return; }
