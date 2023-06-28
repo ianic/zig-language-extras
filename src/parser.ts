@@ -56,6 +56,7 @@ export class Parser {
     }
 
     private absolutePath(filePath: string) {
+        if (!this.cwd) { return filePath; }
         if (!filePath.includes(this.cwd)) {
             return require("path").resolve(this.cwd, filePath);
         }
