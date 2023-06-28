@@ -1,6 +1,6 @@
 # Zig Language Extras 
 
-This extension is adding few commands for Zig development:
+This extension adds few commands for Zig development:
   * Zig extras: Run single test
   * Zig extras: Run file tests
   * Zig extras: Debug test
@@ -19,7 +19,7 @@ will work for all. So I make it more procedural way by analyzing zig command
 output line by line. 
 
 
-Add to you keybindings.json something like:
+When adding keybinding you can restrict usage on Zig language files:
   ```jsonc
     // Zig extras: Run file tests
     {
