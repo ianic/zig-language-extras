@@ -3,20 +3,24 @@ import * as fs from 'fs';
 import { Parser } from '../../parser';
 import * as glob from 'glob';
 
+const testdataRoot = __dirname.replace('/out/', '/src/') + '/testdata/';
 const writeExpected = false;
+
+function readTestCase(file: string) {
+    return fs.readFileSync(testdataRoot + file, 'utf-8');
+}
 
 suite('Parsing Zig command output', () => {
 
     test('test cases from testdata folder', () => {
-        const testdataRoot = __dirname.replace('/out/', '/src/') + '/testdata/';
         // find all *.txt in testdata
         glob('**/**.txt', { cwd: testdataRoot }, (err, files) => {
             if (err) {
-                // TODO
+                throw err;
             }
             files.forEach(file => {
                 // find expected file for output
-                const data = fs.readFileSync(testdataRoot + file, 'utf-8');
+                const data = readTestCase(file);
                 const expectedFileName = testdataRoot + file + "_expected.json";
 
                 // parse
@@ -34,6 +38,7 @@ suite('Parsing Zig command output', () => {
                     if (expected.length === 0) {
                         test("no problems", () => {
                             assert.equal(0, parser.problems.length);
+                            assert.equal(0, parser.problemsCount());
                         });
                     }
                     expected.forEach((e: any, i: number) => {
@@ -49,6 +54,19 @@ suite('Parsing Zig command output', () => {
                 });
             });
         });
+    });
+
+    test("group problems by file", () => {
+        const data = readTestCase("assert_failed_in_test.txt");
+        const parser = new Parser("", data);
+        assert.equal(8, parser.problemsCount());
+        const map = parser.groupByFile();
+        const keys = Object.keys(map);
+
+        assert.equal(3, keys.length);
+        assert.equal(6, map[keys[0]].length);
+        assert.equal(1, map[keys[1]].length);
+        assert.equal(1, map[keys[2]].length);
     });
 });
 

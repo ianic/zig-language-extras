@@ -23,6 +23,8 @@ class Problem {
     ) { }
 }
 
+type ProblemsMap = { [id: string]: Problem[]; };
+
 export class Parser {
     problems: Problem[];
     cwd: string;
@@ -35,33 +37,25 @@ export class Parser {
         this.parse();
     }
 
-    length() {
+    problemsCount() {
         return this.problems.length;
-        // const keys = Object.keys(this.map);
-        // if (keys.length === 0) {
-        //     return 0;
-        // }
-        // return keys.map((key) => { return this.map[key].length; }).reduce((val, cur) => { return val + cur; });
     }
 
-    push(file: string, line: number, column: number, message: string, severity: Severity = Severity.error) {
+    groupByFile() {
+        let map: ProblemsMap = {};
+        this.problems.forEach((p) => {
+            if (map[p.file] === undefined) { map[p.file] = []; };
+            map[p.file].push(p);
+        });
+        return map;
+    }
+
+    private push(file: string, line: number, column: number, message: string, severity: Severity = Severity.error) {
         file = this.absolutePath(file);
         this.problems.push(new Problem(file, line, column, message, severity));
-        // filePath = this.absolutePath(filePath);
-        // let range = new vscode.Range(line, column, line, Infinity);
-
-        // if (this.map[filePath] === undefined) { this.map[filePath] = []; };
-        // this.map[filePath].push(new vscode.Diagnostic(range, this.removeThreadId(message), severity));
     }
 
-    // createProblems(diagnosticCollection: vscode.DiagnosticCollection) {
-    //     for (let filePath in this.map) {
-    //         let fileDiagnostics = this.map[filePath];
-    //         diagnosticCollection.set(vscode.Uri.file(filePath), fileDiagnostics);
-    //     }
-    // }
-
-    absolutePath(filePath: string) {
+    private absolutePath(filePath: string) {
         if (!filePath.includes(this.cwd)) {
             return require("path").resolve(this.cwd, filePath);
         }
@@ -70,23 +64,23 @@ export class Parser {
 
     parse() {
         if (this.lines.length === 0) { return; }
-        if (this.testsPassed()) { return; }
+        //if (this.testsPassed()) { return; }
 
         this.parseTest();
-        if (this.length() === 0) {
+        if (this.problemsCount() === 0) {
             this.parseBuild();
         }
-        if (this.length() === 0) {
+        if (this.problemsCount() === 0) {
             this.parseBuildTest();
         }
     }
 
-    testsPassed() {
+    private testsPassed() {
         const line = this.lines[this.lines.length - 1];
         return !!line.match(allTestsPassedRegexp);
     }
 
-    parseBuild() {
+    private parseBuild() {
         for (let i = 0; i < this.lines.length; i++) {
             const line = this.lines[i];
             let match = line.match(buildRegexp);
@@ -104,7 +98,7 @@ export class Parser {
         }
     }
 
-    parseBuildTest() {
+    private parseBuildTest() {
         let match = this.lines[0].match(buildRunTestHeaderRegexp);
         if (match) {
             const message = match[1];
@@ -112,7 +106,7 @@ export class Parser {
         }
     }
 
-    matchOtherFileLines(startIndex: number, endIndex: number, message: string) {
+    private matchOtherFileLines(startIndex: number, endIndex: number, message: string) {
         for (let i = startIndex; i < endIndex; i++) {
             const line = this.lines[i];
             let match = line.match(otherFileRegexp);
@@ -126,7 +120,7 @@ export class Parser {
         }
     }
 
-    parseTest() {
+    private parseTest() {
         const linesCount = this.lines.length;
 
         for (let i = 0; i < linesCount; i++) {
@@ -160,7 +154,7 @@ export class Parser {
 
     // remove thread id from error message
     // 'thread 46176743 panic: reached unreachable code' => 'panic: reached unreachable code'
-    removeThreadId(message: string) {
+    private removeThreadId(message: string) {
         const match = message.match(/^thread\s+\d+\s+(.*)$/);
         return match ? match[1] : message;
     }

@@ -4,11 +4,12 @@ This extension is adding few commands for Zig development:
   * Zig extras: Run single test
   * Zig extras: Run file tests
   * Zig extras: Debug test
+  * Zig extras: Build workspace
+  * Zig extras: Test workspace
 
 Assumes that you are already using
-[vscode-zig](https://github.com/ziglang/vscode-zig) extension. This one uses
-configuration to found Zig binary from that.
-
+[vscode-zig](https://github.com/ziglang/vscode-zig) extension. Extras extension uses
+configuration in vscode-zig to found Zig binary location if configured there.
 
 The main reason I decided to make this is to create fine vscode problems from
 zig command output. When running tests there can be few different versions of
@@ -80,8 +81,19 @@ builds binary and starts debug launch configuration.
 
 ### code
 
-Zig command output parser is in [src/diagnostic.ts](src/diagnostic.ts) and the
-corresponding tests in the [src/test/suite/extension.test.ts](src/test/suite/extension.test.ts#L102).
+
+Zig command output parser is in [src/parser.ts](src/parser.ts) and the
+corresponding tests in the [src/test/suite/parser.test.ts](src/test/suite/parser.test.ts).
+
+Parser test cases are in files located in
+[src/test/suite/testdata](src/test/suite/testdata]). Each case in .txt file has
+corresponding expected parser output in _expected.json file. Parser test loads
+all txt files and expects to get parsing result as in expected file.
+
+Parser has no dependency on vscode so it is possible to test without running vscode:
+```sh
+mocha -ui tdd out/test/suite/parser.test.js
+```
 
 <!--
   ### Notes to myself

@@ -5,7 +5,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import { Diagnostic } from './diagnostic';
+import { Parser } from './parser';
 
 // globals, set in activate used in other functions
 let diagnosticCollection: vscode.DiagnosticCollection;
@@ -147,8 +147,19 @@ function runZig(args: string[], cwd: string, successCallback?: () => void) {
 			if (!err) { output.appendLine("OK"); }
 		}
 		if (err) {
-			const diagnostic = new Diagnostic(cwd, stderr);
-			diagnostic.createProblems(diagnosticCollection);
+			const parser = new Parser(cwd, stderr);
+			if (parser.problemsCount() > 0) {
+				// parser problems to vscode diagnostics
+				const map = parser.groupByFile();
+				for (let file in map) {
+					let problems = map[file];
+					const diagnostics = problems.map((problem) => {
+						let range = new vscode.Range(problem.line, problem.column, problem.line, Infinity);
+						return new vscode.Diagnostic(range, problem.message, problem.severity.valueOf());
+					});
+					diagnosticCollection.set(vscode.Uri.file(file), diagnostics);
+				}
+			}
 		} else {
 			if (successCallback) {
 				successCallback();
