@@ -1,3 +1,5 @@
+import * as path from 'path';
+
 const testHeaderRegexp = /^\d+\/\d+\s+test\.([^\.]*)\.\.\.\s+(.*)$/; // matches '1/5 test.simple test... OK'
 const testFileRegexp = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+test\.(.*)\s+\(test\)$/; // matches '/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:29:5: 0x102044ec3 in test.add 2 (test)'
 const otherFileRegexp = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+(.*)\s+\(test\)$/; // matches '/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:46:10: 0x104c90fe7 in second (test)'
@@ -56,11 +58,9 @@ export class Parser {
     }
 
     private absolutePath(filePath: string) {
-        if (!this.cwd) { return filePath; }
-        if (!filePath.includes(this.cwd)) {
-            return require("path").resolve(this.cwd, filePath);
-        }
-        return filePath;
+        if (!this.cwd || path.isAbsolute(filePath) || !path.isAbsolute(this.cwd)) { return filePath; }
+        console.log("appending path", this.cwd);
+        return path.resolve(this.cwd, filePath);
     }
 
     parse() {
