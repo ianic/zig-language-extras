@@ -45,7 +45,7 @@ export class Parser {
 
     groupByFile() {
         let map: ProblemsMap = {};
-        this.problems.forEach((p) => {
+        this.problems.forEach((p: Problem) => {
             if (map[p.file] === undefined) { map[p.file] = []; };
             map[p.file].push(p);
         });
@@ -60,7 +60,7 @@ export class Parser {
     private absolutePath(filePath: string) {
         if (!this.cwd || path.isAbsolute(filePath) || !path.isAbsolute(this.cwd)) { return filePath; }
         return path.resolve(this.cwd, filePath);
-    } P
+    }
 
     parse() {
         if (this.lines.length === 0) { return; }
