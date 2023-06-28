@@ -4,7 +4,6 @@ import { Parser } from '../../parser';
 import * as glob from 'glob';
 import * as path from 'path';
 
-
 const testdataRoot = path.join(__dirname.replace(path.sep + 'out' + path.sep, path.sep + 'src' + path.sep), 'testdata');
 const writeExpected = false;
 
@@ -21,9 +20,12 @@ suite('Parsing Zig command output', () => {
                 throw err;
             }
             files.forEach(file => {
+
                 // find expected file for output
                 const data = readTestCase(file);
                 const expectedFileName = path.join(testdataRoot, file + "_expected.json");
+                console.log("testing files", file, expectedFileName);
+                console.log("data", data);
 
                 // parse
                 const parser = new Parser("/project/root", data);
@@ -37,12 +39,14 @@ suite('Parsing Zig command output', () => {
                 // parser output should match saved expected file
                 suite(file, () => {
                     const expected = JSON.parse(fs.readFileSync(expectedFileName, 'utf-8'));
+                    console.log("expected", expected);
                     if (expected.length === 0) {
                         test("no problems", () => {
                             assert.equal(0, parser.problems.length);
                             assert.equal(0, parser.problemsCount());
                         });
                     }
+                    assert.equal(expected.length, parser.problemsCount());
                     expected.forEach((e: any, i: number) => {
                         test("problem " + (i + 1) + " matches expected ", () => {
                             const p = parser.problems[i];
