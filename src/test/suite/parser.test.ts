@@ -29,8 +29,9 @@ suite('Parsing Zig command output', () => {
                 //console.log("data", data);
 
                 // parse
-                const cwd = path.sep === "/" ? "/project/root" : 'c:\project\root';
-                const parser = new Parser(cwd, data);
+                //const cwd = path.sep === "/" ? "/project/root" : 'c:\project\root';
+                //const cwd = path.join("c:", "project", "root");
+                const parser = new Parser("/project/root", data);
 
                 if (writeExpected) { // used while creating expected files
                     const actual = JSON.stringify(parser.problems, null, 2);
@@ -52,11 +53,11 @@ suite('Parsing Zig command output', () => {
                     expected.forEach((e: any, i: number) => {
                         test("problem " + (i + 1) + " matches expected ", () => {
                             const p = parser.problems[i];
-                            assert.equal(e.file, p.file);
-                            assert.equal(e.line, p.line);
-                            assert.equal(e.column, p.column);
-                            assert.equal(e.message, p.message);
-                            assert.equal(e.severity, p.severity);
+                            assert.equal(p.file, e.file);
+                            assert.equal(p.line, e.line);
+                            assert.equal(p.column, e.column);
+                            assert.equal(p.message, e.message);
+                            assert.equal(p.severity, e.severity);
                         });
                     });
                 });
