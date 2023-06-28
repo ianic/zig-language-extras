@@ -67,6 +67,9 @@ suite('Parsing Zig command output', () => {
     test("group problems by file", () => {
         const data = readTestCase("assert_failed_in_test.txt");
         const parser = new Parser("", data);
+        console.log("lines", parser.lines);
+        console.log("parser problems:", JSON.stringify(parser.problems, null, 2));
+
         assert.equal(8, parser.problemsCount());
         const map = parser.groupByFile();
         const keys = Object.keys(map);
