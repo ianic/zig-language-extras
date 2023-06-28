@@ -59,7 +59,6 @@ export class Parser {
 
     private absolutePath(filePath: string) {
         if (!this.cwd || path.isAbsolute(filePath) || !path.isAbsolute(this.cwd)) { return filePath; }
-        console.log("appending path", this.cwd);
         return path.resolve(this.cwd, filePath);
     }
 
