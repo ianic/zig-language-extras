@@ -2,12 +2,14 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import { Parser } from '../../parser';
 import * as glob from 'glob';
+import * as path from 'path';
 
-const testdataRoot = __dirname.replace('/out/', '/src/') + '/testdata/';
+
+const testdataRoot = path.join(__dirname.replace(path.sep + 'out' + path.sep, path.sep + 'src' + path.sep), 'testdata');
 const writeExpected = false;
 
 function readTestCase(file: string) {
-    return fs.readFileSync(testdataRoot + file, 'utf-8');
+    return fs.readFileSync(path.join(testdataRoot, file), 'utf-8');
 }
 
 suite('Parsing Zig command output', () => {
@@ -21,7 +23,7 @@ suite('Parsing Zig command output', () => {
             files.forEach(file => {
                 // find expected file for output
                 const data = readTestCase(file);
-                const expectedFileName = testdataRoot + file + "_expected.json";
+                const expectedFileName = path.join(testdataRoot, file + "_expected.json");
 
                 // parse
                 const parser = new Parser("/project/root", data);

@@ -86,7 +86,7 @@ Zig command output parser is in [src/parser.ts](src/parser.ts) and the
 corresponding tests in the [src/test/suite/parser.test.ts](src/test/suite/parser.test.ts).
 
 Parser test cases are in files located in
-[src/test/suite/testdata](src/test/suite/testdata]). Each case in .txt file has
+src/test/suite/testdata. Each case in .txt file has
 corresponding expected parser output in _expected.json file. Parser test loads
 all txt files and expects to get parsing result as in expected file.
 
