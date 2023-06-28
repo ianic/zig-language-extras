@@ -21,16 +21,11 @@ suite('Parsing Zig command output', () => {
                 throw err;
             }
             files.forEach(file => {
-
                 // find expected file for output
                 const data = readTestCase(file);
                 const expectedFileName = path.join(testdataRoot, file + "_expected.json");
-                //console.log("testing files", file, expectedFileName);
-                //console.log("data", data);
 
                 // parse
-                //const cwd = path.sep === "/" ? "/project/root" : 'c:\project\root';
-                //const cwd = path.join("c:", "project", "root");
                 const parser = new Parser("/project/root", data);
 
                 if (writeExpected) { // used while creating expected files
@@ -42,7 +37,6 @@ suite('Parsing Zig command output', () => {
                 // parser output should match saved expected file
                 suite(file, () => {
                     const expected = JSON.parse(fs.readFileSync(expectedFileName, 'utf-8'));
-                    //console.log("expected", expected);
                     if (expected.length === 0) {
                         test("no problems", () => {
                             assert.equal(0, parser.problems.length);
@@ -68,8 +62,6 @@ suite('Parsing Zig command output', () => {
     test("group problems by file", () => {
         const data = readTestCase("assert_failed_in_test.txt");
         const parser = new Parser("", data);
-        console.log("lines", parser.lines);
-        console.log("parser problems:", JSON.stringify(parser.problems, null, 2));
 
         assert.equal(8, parser.problemsCount());
         const map = parser.groupByFile();

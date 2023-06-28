@@ -139,7 +139,6 @@ export class Parser {
                             const column = parseInt(fileLineMatch[3]) - 1;
                             const fileTestName = fileLineMatch[4];
                             if (fileTestName === testName) {
-                                //console.log("diagnostic.push", testName, message, filePath, line, column);
                                 this.push(filePath, line, column, message);
                                 this.matchOtherFileLines(i, j, message);
                                 i = j;
