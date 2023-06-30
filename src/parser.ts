@@ -54,6 +54,7 @@ export class Parser {
 
     private push(file: string, line: number, column: number, message: string, severity: Severity = Severity.error) {
         file = this.absolutePath(file);
+        message = this.removeThreadId(message);
         this.problems.push(new Problem(file, line, column, message, severity));
     }
 
@@ -81,6 +82,7 @@ export class Parser {
     }
 
     private parseBuild() {
+        var errorMessage = "";
         for (let i = 0; i < this.lines.length; i++) {
             const line = this.lines[i];
             let match = line.match(buildRegexp);
@@ -92,7 +94,13 @@ export class Parser {
                 let message = match[5];
                 let severity = (!type || type.trim().toLowerCase() === "error") ?
                     Severity.error :
-                    Severity.hint;
+                    Severity.information;
+                if (!errorMessage && severity === Severity.error) {
+                    errorMessage = message;
+                };
+                if (severity === Severity.information) {
+                    message = errorMessage + "\n" + message;
+                }
                 this.push(path, line, column, message, severity);
             }
         }

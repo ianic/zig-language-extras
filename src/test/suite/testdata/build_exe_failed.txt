@@ -1,0 +1,11 @@
+zig build-exe spell_checker Debug native: error: the following command failed with 1 compilation errors:
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/zig build-exe /home/ianic/zig/zds/examples/spell_checker.zig --cache-dir /home/ianic/zig/zds/zig-cache --global-cache-dir /home/ianic/.cache/zig --name spell_checker --listen=- 
+Build Summary: 2/5 steps succeeded; 1 failed (disable with --summary none)
+install transitive failure
++- install spell_checker transitive failure
+   +- zig build-exe spell_checker Debug native 1 errors
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig:593:45: error: 'main' is not marked 'pub'
+examples/spell_checker.zig:4:1: note: declared here
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig:542:12: note: called from here
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig:492:36: note: called from here
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig:455:17: note: called from here
