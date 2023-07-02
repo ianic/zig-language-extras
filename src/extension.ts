@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 
 import { Parser } from './parser';
 
@@ -32,6 +33,9 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('zig-language-extras.testWorkspace', testWorkspace)
 	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('zig-language-extras.debugBinary', debugBinary)
+	);
 }
 
 function testWorkspace() {
@@ -57,13 +61,41 @@ function debugTest() {
 
 	const debugEnv = getDebugEnv();
 
-	mkdirp(path.resolve(env.cwd, debugEnv.testBinaryPath)); // ensure that output directory exists
+	const binPath = debugEnv.testBinaryPath;
+	mkdirp(path.resolve(env.cwd, binPath)); // ensure that output directory exists
 
-	const args: string[] = ["test", "--test-filter", env.testName, env.fileNameRelative, "-femit-bin=" + debugEnv.testBinaryPath];
+	const args: string[] = ["test", "--test-filter", env.testName, env.fileNameRelative, "-femit-bin=" + binPath];
 	runZig(args, env.cwd, () => {
-		output.appendLine("Starting launch configuration '" + debugEnv.launchConfiguration + "'");
-		vscode.debug.startDebugging(env.workspaceFolder, debugEnv.launchConfiguration);
+		output.appendLine("Debugging binary " + binPath);
+		startDebugging(env.workspaceFolder, binPath);
 	});
+}
+
+function debugBinary() {
+	const env = getEnv(false);
+	if (!env) { return; }
+
+	const binPath = path.join("zig-out", "bin", env.binName);
+
+	const args: string[] = ["build"];
+	runZig(args, env.cwd, () => {
+		output.appendLine("Debugging binary " + binPath);
+		startDebugging(env.workspaceFolder, binPath);
+	});
+}
+
+
+function startDebugging(wf: vscode.WorkspaceFolder, binPath: string) {
+	const isDarwin = os.platform() === "darwin";
+	let launchConfig = {
+		"name": "ZigDebugBinary",
+		"type": isDarwin ? "lldb" : "gdb",
+		"request": "launch",
+		"target": binPath,
+		"program": binPath,
+		"cwd": "${workspaceRoot}",
+	};
+	vscode.debug.startDebugging(wf, launchConfig);
 }
 
 function runSingleTest() {
@@ -84,13 +116,11 @@ function runFileTests() {
 
 // path for debug binary relative to the workspace root
 const defaultTestBinaryPath = "./zig-out/debug/test";
-const defaultDebugLaunchConfiguration = "ZigDebugTest";
 
 function getDebugEnv() {
 	const config = vscode.workspace.getConfiguration('zig-language-extras');
 	return {
 		testBinaryPath: config.get<string>("testBinaryPath") || defaultTestBinaryPath,
-		launchConfiguration: config.get<string>("debugLaunchConfiguration") || defaultDebugLaunchConfiguration,
 	};
 }
 
@@ -114,6 +144,16 @@ function getEnv(findCurrentTest: boolean = true) {
 	const fileNameRelative = path.relative(cwd, fileName);
 	const testName = findCurrentTest ? findTest(editor) : undefined;
 
+	// binary name from the current file
+	let binName = path.basename(fileNameRelative);
+	if (binName === "main.zig") {
+		// for main.zig use name of the directory in the file path excluding src
+		const dirs = path.dirname(fileName).split(path.sep);
+		binName = dirs.reverse().find((dir) => {
+			return ["src"].includes(dir) ? null : dir;
+		}) || binName;
+	}
+
 	if (findCurrentTest && !testName) {
 		output.appendLine("Current test not found!");
 	}
@@ -125,6 +165,7 @@ function getEnv(findCurrentTest: boolean = true) {
 		fileName: fileName,
 		fileNameRelative: fileNameRelative,
 		testName: testName,
+		binName: binName,
 	};
 }
 
