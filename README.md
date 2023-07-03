@@ -1,15 +1,21 @@
 # Zig Language Extras 
 
-This extension adds few commands for Zig development:
+This extension adds few [commands](https://github.com/ianic/zig-language-extras/blob/de59f5422a73d976fa47961fb2cb0974037687b4/package.json#L34) for Zig development:
   * Zig extras: Run single test
   * Zig extras: Run file tests
-  * Zig extras: Debug test
-  * Zig extras: Build workspace
   * Zig extras: Test workspace
+  * Zig extras: Build workspace
+  * Zig extras: Debug test
+  * Zig extras: Debug binary
 
-Assumes that you are already using
-[vscode-zig](https://github.com/ziglang/vscode-zig) extension. Extras extension uses
-configuration in vscode-zig to found Zig binary location if configured there.
+It
+[depends](https://github.com/ianic/zig-language-extras/blob/de59f5422a73d976fa47961fb2cb0974037687b4/package.json#L8)
+on three other extensions. vscode-zig for location of Zig binary. [Native
+Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) for
+launching debugger on Linux and
+[CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
+for debugging on MacOS.
+
 
 The main reason I decided to make this is to create fine vscode problems from
 zig command output. When running tests there can be few different versions of
@@ -18,6 +24,38 @@ test. All of those have different output and it is hard to make regexp which
 will work for all. So I make it more procedural way by analyzing zig command
 output line by line. 
 
+## Testing
+
+'Test workspace' runs `zig build test` in the root of the workspace so depends
+on tests definition in you build.zig
+
+'Run file tests' runs all tests in the current file `zig test {file_name}`.
+
+'Run single tests' tries to find test name from the current position. It first
+searches up from the current position to find name of the test. If not found
+then it searches down. If you are positioned in the test, that will run that
+test. If you are in the code and the tests are below you code this will find
+first test. 
+## Building
+
+'Build workspace' command runs `zig build` in the root of the workspace. 
+
+## Debugging
+
+There are two debugging commands. 
+
+'Debug test' builds binary for the test (binary location: zig-out/debug/test)
+and starts debugger on that binary. Put breakpoint in you test before running
+command.
+
+'Debug binary' first builds workspace and then starts binary zig-out/bin/{name}.
+If current file is in src folder name is set to the folder name above src folder
+which is expected to be root of you workspace. If the current file is in some
+other folder then the name of the current file is used as name of the binary
+except if that file is named main.zig then folder name of that file is used as
+expected binary name.
+
+### Keybinding
 
 When adding keybinding you can restrict usage on Zig language files:
   ```jsonc
@@ -79,8 +117,7 @@ With that I position myself into Zig test and run 'Debug test' command. That
 builds binary and starts debug launch configuration.
 
 
-### code
-
+### Extension development
 
 Zig command output parser is in [src/parser.ts](src/parser.ts) and the
 corresponding tests in the [src/test/suite/parser.test.ts](src/test/suite/parser.test.ts).
