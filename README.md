@@ -10,7 +10,9 @@ This extension adds few [commands](https://github.com/ianic/zig-language-extras/
 
 It
 [depends](https://github.com/ianic/zig-language-extras/blob/de59f5422a73d976fa47961fb2cb0974037687b4/package.json#L8)
-on three other extensions. vscode-zig for location of Zig binary. [Native
+on three other extensions.
+[Zig Language](https://marketplace.visualstudio.com/items?itemName=ziglang.vscode-zig)
+for location of Zig binary. [Native
 Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) for
 launching debugger on Linux and
 [CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
@@ -72,50 +74,6 @@ When adding keybinding you can restrict usage on Zig language files:
         "when": "editorLangId == 'zig'"
     },
   ```
-
-### Debug test
-
-This command runs single Zig test and outputs test binary to configured location
-(default zig-out/debug/test). You should use that binary as a target for
-debugger launch configuration. Command will run configured launch configuration
-(default ZigDebugTest).
-
-On mac I have installed [CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
-extension with launch.json:
-```json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "ZigDebugTest",
-            "type": "lldb",
-            "request": "launch",
-            "program": "./zig-out/debug/test",
-            "cwd": "${workspaceFolder}",
-        }
-    ]
-}
-```
-On Linux I'm using [Native Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) extension with launch.json:
-```json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "ZigDebugTest",
-            "type": "gdb",
-            "request": "launch",
-            "target": "./zig-out/debug/test",
-            "cwd": "${workspaceFolder}",
-        }
-    ]
-}
-```
-
-
-With that I position myself into Zig test and run 'Debug test' command. That
-builds binary and starts debug launch configuration.
-
 
 ### Extension development
 
