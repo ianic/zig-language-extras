@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 
 import { Parser } from './parser';
+import { File } from 'buffer';
 
 // globals, set in activate used in other functions
 let diagnosticCollection: vscode.DiagnosticCollection;
@@ -145,7 +146,7 @@ function getEnv(findCurrentTest: boolean = true) {
 	const testName = findCurrentTest ? findTest(editor) : undefined;
 
 	// binary name from the current file
-	let binName = path.basename(fileNameRelative);
+	let binName = path.parse(fileNameRelative).name;
 	if (binName === "main.zig") {
 		// for main.zig use name of the directory in the file path excluding src
 		const dirs = path.dirname(fileName).split(path.sep);
