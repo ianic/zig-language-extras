@@ -10,6 +10,9 @@ for Zig development:
   * Zig extras: Debug test
   * Zig extras: Debug binary
 
+It also displays code lenses above tests to run or debug single test, and code
+lens at the first line of the file to run all tests.
+
 It
 [depends](https://github.com/ianic/zig-language-extras/blob/de59f5422a73d976fa47961fb2cb0974037687b4/package.json#L8)
 on three other extensions.
@@ -59,7 +62,7 @@ other folder then the name of the current file is used as name of the binary
 except if that file is named main.zig then folder name of that file is used as
 expected binary name.
 
-### Keybinding
+## Keybinding
 
 When adding keybinding you can restrict usage on Zig language files:
   ```jsonc
@@ -77,7 +80,7 @@ When adding keybinding you can restrict usage on Zig language files:
     },
   ```
 
-### Extension development
+## Extension development
 
 Zig command output parser is in [src/parser.ts](src/parser.ts) and the
 corresponding tests in the [src/test/suite/parser.test.ts](src/test/suite/parser.test.ts).
@@ -91,6 +94,12 @@ Parser has no dependency on vscode so it is possible to test without running vsc
 ```sh
 mocha -ui tdd out/test/suite/parser.test.js
 ```
+
+## Credits 
+
+Code lenses implementation is taken from Jarred-Sumner's [pull
+request](https://github.com/ziglang/vscode-zig/pull/57/files) to original
+vscode-zig extension.
 
 <!--
   ### Notes to myself
