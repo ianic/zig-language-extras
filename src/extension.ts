@@ -7,17 +7,28 @@ import * as fs from 'fs';
 import * as os from 'os';
 
 import { Parser } from './parser';
-import { File } from 'buffer';
+import { CodelensProvider } from "./code_lens_provider";
+//import { File } from 'buffer';
 
 // globals, set in activate used in other functions
 let diagnosticCollection: vscode.DiagnosticCollection;
 let output: vscode.OutputChannel;
+
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	diagnosticCollection = vscode.languages.createDiagnosticCollection('Zig extras');
 	output = vscode.window.createOutputChannel("Zig extras");
+
+	let codeLens = new CodelensProvider();
+	const select: vscode.DocumentSelector = {
+		language: "zig",
+		scheme: "file",
+	};
+	context.subscriptions.push(
+		vscode.languages.registerCodeLensProvider(select, codeLens)
+	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('zig-language-extras.runSingleTest', runSingleTest)
@@ -55,17 +66,19 @@ function buildWorkspace() {
 	runZig(args, env.cwd);
 }
 
-function debugTest() {
+function debugTest(testName: string | undefined) {
 	const env = getEnv();
 	if (!env) { return; }
-	if (!env || !env.testName) { return; }
+	if (!env) { return; }
+	testName = testName || env.testName;
+	if (!testName) { return; };
 
 	const debugEnv = getDebugEnv();
 
 	const binPath = debugEnv.testBinaryPath;
 	mkdirp(path.resolve(env.cwd, binPath)); // ensure that output directory exists
 
-	const args: string[] = ["test", "--test-filter", env.testName, env.fileNameRelative, "-femit-bin=" + binPath];
+	const args: string[] = ["test", "--test-filter", testName, env.fileNameRelative, "-femit-bin=" + binPath];
 	runZig(args, env.cwd, () => {
 		output.appendLine("Debugging binary " + binPath);
 		startDebugging(env.workspaceFolder, binPath);
@@ -99,11 +112,13 @@ function startDebugging(wf: vscode.WorkspaceFolder, binPath: string) {
 	vscode.debug.startDebugging(wf, launchConfig);
 }
 
-function runSingleTest() {
+function runSingleTest(testName: string | undefined) {
 	const env = getEnv();
-	if (!env || !env.testName) { return; }
+	if (!env) { return; }
+	testName = testName || env.testName;
+	if (!testName) { return; };
 
-	const args: string[] = ["test", "--test-filter", env.testName, env.fileNameRelative];
+	const args: string[] = ["test", "--test-filter", testName, env.fileNameRelative];
 	runZig(args, env.cwd);
 }
 

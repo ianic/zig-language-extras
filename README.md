@@ -1,6 +1,8 @@
 # Zig Language Extras 
 
-This extension adds few [commands](https://github.com/ianic/zig-language-extras/blob/de59f5422a73d976fa47961fb2cb0974037687b4/package.json#L34) for Zig development:
+This extension adds few
+[commands](https://github.com/ianic/zig-language-extras/blob/de59f5422a73d976fa47961fb2cb0974037687b4/package.json#L34)
+for Zig development:
   * Zig extras: Run single test
   * Zig extras: Run file tests
   * Zig extras: Test workspace
