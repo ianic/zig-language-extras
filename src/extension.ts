@@ -144,17 +144,34 @@ function getEnv(findCurrentTest: boolean = true) {
 	output.clear();
 	output.show(true);
 
-	const editor = vscode.window.activeTextEditor;
+	let editor = vscode.window.activeTextEditor;
 	if (!editor) {
 		output.appendLine("No active text editor found!");
 		return undefined;
 	}
-
-	const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
-	if (!workspaceFolder) {
-		output.appendLine("No workspace folder found!");
-		return undefined;
+	if (editor.document.uri.scheme !== 'file') {
+		// find file editor
+		for (let e of vscode.window.visibleTextEditors) {
+			if (e.document.uri.scheme === 'file') {
+				editor = e;
+				break;
+			}
+		}
 	}
+
+	let workspaceFolder: vscode.WorkspaceFolder;
+	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders?.length === 1) {
+		workspaceFolder = vscode.workspace.workspaceFolders[0];
+	} else {
+		// get workspace folder from current file
+		const wf = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+		if (!wf) {
+			output.appendLine("No workspace folder found!");
+			return undefined;
+		}
+		workspaceFolder = wf;
+	}
+
 	const cwd = workspaceFolder.uri.fsPath || "";
 	const fileName = editor.document.fileName;
 	const fileNameRelative = path.relative(cwd, fileName);

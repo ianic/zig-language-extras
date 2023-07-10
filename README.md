@@ -24,17 +24,21 @@ launching debugger on Linux and
 for debugging on MacOS.
 
 
-The main reason I decided to make this is to create fine vscode problems from
-zig command output. When running tests there can be few different versions of
-the output. Build can fail, test can fail, assert can be risen while running the
-test. All of those have different output and it is hard to make regexp which
-will work for all. So I make it more procedural way by analyzing zig command
-output line by line. 
+The main reason I decided to make this is to create fine vscode problems
+description from zig command output. When running tests there can be few
+different versions of the output. Build can fail, test can fail, assert can be
+risen while running the test. All of those have different output and it is hard
+to make single regexp which will work for all. So I make it more procedural way
+by analyzing zig command output line by line. 
+
+Most of the commands are expecting folder structure built with 'zig init-exe' or
+'zig init-lib'. With build.zig in the root and files under src. Folder with the
+build.zig is expected to be root of the vscode workspace.
 
 ## Testing
 
 'Test workspace' runs `zig build test` in the root of the workspace so depends
-on tests definition in you build.zig
+on tests definition in your build.zig
 
 'Run file tests' runs all tests in the current file `zig test {file_name}`.
 
@@ -52,17 +56,17 @@ first test.
 There are two debugging commands. 
 
 'Debug test' builds binary for the test (binary location: zig-out/debug/test)
-and starts debugger on that binary. Put breakpoint in you test before running
+and starts debugger on that binary. Put a breakpoint in you test before running
 command.
 
 'Debug binary' first builds workspace and then starts binary zig-out/bin/{name}.
 If current file is in src folder name is set to the folder name above src folder
-which is expected to be root of you workspace. If the current file is in some
+which is expected to be root of your workspace. If the current file is in some
 other folder then the name of the current file is used as name of the binary
 except if that file is named main.zig then folder name of that file is used as
 expected binary name.
 
-## Keybinding
+## Keybinding tip
 
 When adding keybinding you can restrict usage on Zig language files:
   ```jsonc
