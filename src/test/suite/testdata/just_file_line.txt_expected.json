@@ -1,0 +1,65 @@
+[
+  {
+    "file": "/home/ianic/zig/io_uring/loop/src/tcp.zig",
+    "line": 217,
+    "column": 28,
+    "message": "in write (test)",
+    "severity": 0
+  },
+  {
+    "file": "/home/ianic/zig/io_uring/loop/src/tcp_echo_test.zig",
+    "line": 185,
+    "column": 29,
+    "message": "in writeResolve (test)",
+    "severity": 0
+  },
+  {
+    "file": "/home/ianic/zig/io_uring/loop/src/tcp.zig",
+    "line": 184,
+    "column": 27,
+    "message": "in complete (test)",
+    "severity": 0
+  },
+  {
+    "file": "/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/Thread.zig",
+    "line": 432,
+    "column": 12,
+    "message": "in callFn__anon_7160 (test)",
+    "severity": 0
+  },
+  {
+    "file": "/project/root/src/main.zig",
+    "line": 32,
+    "column": 18,
+    "message": "error is ignored",
+    "severity": 0
+  },
+  {
+    "file": "/project/root/src/main.zig",
+    "line": 32,
+    "column": 18,
+    "message": "error is ignored\nconsider using 'try', 'catch', or 'if'",
+    "severity": 2
+  },
+  {
+    "file": "/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig",
+    "line": 592,
+    "column": 44,
+    "message": "'main' is not marked 'pub'",
+    "severity": 0
+  },
+  {
+    "file": "/project/root/examples/spell_checker.zig",
+    "line": 3,
+    "column": 0,
+    "message": "'main' is not marked 'pub'\ndeclared here",
+    "severity": 2
+  },
+  {
+    "file": "/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig",
+    "line": 541,
+    "column": 11,
+    "message": "'main' is not marked 'pub'\ncalled from here",
+    "severity": 2
+  }
+]

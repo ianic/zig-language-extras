@@ -1,0 +1,19 @@
+/home/ianic/zig/io_uring/loop/src/tcp.zig:218:29: 0x2237f3 in write (test)
+        self.completion.args.send.buffer = buffer;
+                            ^
+/home/ianic/zig/io_uring/loop/src/tcp_echo_test.zig:186:30: 0x25ba5b in writeResolve (test)
+            self.writer.write(self.writer_buffer[self.writer_pos..to]);
+                             ^
+/home/ianic/zig/io_uring/loop/src/tcp.zig:185:28: 0x249473 in complete (test)
+                    resolve(ctx, no_bytes);
+                           ^
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/Thread.zig:433:13: 0x249b6b in callFn__anon_7160 (test)
+            @call(.auto, f, args) catch |err| {
+            ^
+
+src/main.zig:33:19: error: error is ignored
+src/main.zig:33:19: note: consider using 'try', 'catch', or 'if'
+
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig:593:45: error: 'main' is not marked 'pub'
+examples/spell_checker.zig:4:1: note: declared here
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig:542:12: note: called from here

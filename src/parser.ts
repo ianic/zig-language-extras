@@ -2,9 +2,11 @@ import * as path from 'path';
 
 const testHeaderRegexp = /^\d+\/\d+\s+test\.([^\.]*)\.\.\.\s+(.*)$/; // matches '1/5 test.simple test... OK'
 const testFileRegexp = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+test\.(.*)\s+\(test\)$/; // matches '/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:29:5: 0x102044ec3 in test.add 2 (test)'
-const otherFileRegexp = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+in\s+(.*)\s+\(test\)$/; // matches '/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:46:10: 0x104c90fe7 in second (test)'
-const buildRegexp = /^(\S.*):(\d*):(\d*): ([^:]*): (.*)$/; // matches 'src/main.zig:33:19: error: error is ignored'
+const otherFileRegexp = /^([^:]*):(\d+):(\d+):\s+[\dxabcdef]*\s+(.*)$/; // matches '/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig:46:10: 0x104c90fe7 in second (test)'
+const buildRegexp = /^(\S.*):(\d*):(\d*):\s(\w*):*\s(.*)$/; // matches 'src/main.zig:33:19: error: error is ignored'
+
 const allTestsPassedRegexp = /^All\s+\d+\s+tests\s+passed.$/; // matches 'All 5 tests passed.'
+const panicRegexp = /^.*thread\s[\dxabcdef]*\s(panic:\s.*)$/;
 
 const buildRunTestHeaderRegexp = /^run test:\s+error:\s+(.*)$/;
 
@@ -69,10 +71,10 @@ export class Parser {
 
         this.parseTest();
         if (this.problemsCount() === 0) {
-            this.parseBuild();
+            this.parsePanic();
         }
         if (this.problemsCount() === 0) {
-            this.parseBuildTest();
+            this.parseBuild();
         }
     }
 
@@ -92,10 +94,10 @@ export class Parser {
                 let column = parseInt(match[3]) - 1;
                 let type = match[4];
                 let message = match[5];
-                let severity = (!type || type.trim().toLowerCase() === "error") ?
-                    Severity.error :
-                    Severity.information;
-                if (!errorMessage && severity === Severity.error) {
+                let severity = (!type || type.trim().toLowerCase() === "note") ?
+                    Severity.information :
+                    Severity.error;
+                if (severity === Severity.error) {
                     errorMessage = message;
                 };
                 if (severity === Severity.information) {
@@ -114,6 +116,17 @@ export class Parser {
         }
     }
 
+    private parsePanic() {
+        const linesCount = this.lines.length;
+        for (let i = 0; i < linesCount; i++) {
+            let match = this.lines[i].match(panicRegexp);
+            if (match) {
+                const message = match[1];
+                this.matchOtherFileLines(i + 1, this.lines.length, message);
+            }
+        }
+    }
+
     private matchOtherFileLines(startIndex: number, endIndex: number, message: string) {
         for (let i = startIndex; i < endIndex; i++) {
             const line = this.lines[i];
@@ -122,8 +135,9 @@ export class Parser {
                 const filePath = match[1];
                 const line = parseInt(match[2]) - 1;
                 const column = parseInt(match[3]) - 1;
-                //const functionName = match[4];
-                this.push(filePath, line, column, message);
+                const msg = message ? message + "\n" + match[4] : message;
+
+                this.push(filePath, line, column, msg);
             }
         }
     }
@@ -136,7 +150,7 @@ export class Parser {
             let match = line.match(testHeaderRegexp);
             if (match) {
                 const testName = match[1];
-                const message = match[2];
+                const message = this.removeThreadId(match[2]);
                 if (message !== "OK") {
                     for (let j = i + 1; j < linesCount; j++) {
                         const fileLine = this.lines[j];
@@ -162,7 +176,7 @@ export class Parser {
     // remove thread id from error message
     // 'thread 46176743 panic: reached unreachable code' => 'panic: reached unreachable code'
     private removeThreadId(message: string) {
-        const match = message.match(/^thread\s+\d+\s+(.*)$/);
+        const match = message.match(/^thread\s+\d+\s+([\s\S]*)/);
         return match ? match[1] : message;
     }
 };

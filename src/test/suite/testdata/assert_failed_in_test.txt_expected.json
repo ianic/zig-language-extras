@@ -17,7 +17,7 @@
     "file": "/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/testing.zig",
     "line": 508,
     "column": 13,
-    "message": "FAIL (TestUnexpectedResult)",
+    "message": "FAIL (TestUnexpectedResult)\nin expect (test)",
     "severity": 0
   },
   {
@@ -31,28 +31,28 @@
     "file": "/usr/local/zig/zig-macos-aarch64-0.11.0-dev.2939+289234744/lib/std/debug.zig",
     "line": 285,
     "column": 13,
-    "message": "panic: reached unreachable code",
+    "message": "panic: reached unreachable code\nin assert (test)",
     "severity": 0
   },
   {
     "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
     "line": 49,
     "column": 20,
-    "message": "panic: reached unreachable code",
+    "message": "panic: reached unreachable code\nin third (test)",
     "severity": 0
   },
   {
     "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
     "line": 45,
     "column": 9,
-    "message": "panic: reached unreachable code",
+    "message": "panic: reached unreachable code\nin second (test)",
     "severity": 0
   },
   {
     "file": "/Users/ianic/code/vscode/zig_extras/test_project/src/main.zig",
     "line": 41,
     "column": 10,
-    "message": "panic: reached unreachable code",
+    "message": "panic: reached unreachable code\nin first (test)",
     "severity": 0
   }
 ]

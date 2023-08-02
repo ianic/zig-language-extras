@@ -45,7 +45,7 @@ suite('Parsing Zig command output', () => {
                     }
                     assert.equal(expected.length, parser.problemsCount());
                     expected.forEach((e: any, i: number) => {
-                        test("problem " + (i + 1) + " matches expected ", () => {
+                        test((i + 1) + " " + e.message.replace("\n", " "), () => {
                             const p = parser.problems[i];
                             assert.equal(p.file, e.file);
                             assert.equal(p.line, e.line);

@@ -1,0 +1,33 @@
+Running: zig test src/tcp_echo_test.zig
+
+1/7 test.echo server... thread 679934 panic: access of union field 'send' while field 'accept' is active
+/home/ianic/zig/io_uring/loop/src/tcp.zig:218:29: 0x2237f3 in write (test)
+        self.completion.args.send.buffer = buffer;
+                            ^
+/home/ianic/zig/io_uring/loop/src/tcp_echo_test.zig:186:30: 0x25ba5b in writeResolve (test)
+            self.writer.write(self.writer_buffer[self.writer_pos..to]);
+                             ^
+/home/ianic/zig/io_uring/loop/src/tcp.zig:185:28: 0x249473 in complete (test)
+                    resolve(ctx, no_bytes);
+                           ^
+/home/ianic/zig/io_uring/loop/src/completion.zig:112:22: 0x224e43 in completed (test)
+        self.complete(self, ose, res, flags);
+                     ^
+/home/ianic/zig/io_uring/loop/src/loop.zig:108:37: 0x224cdf in flush_completions (test)
+                completion.completed(cqe.err(), cqe.res, cqe.flags);
+                                    ^
+/home/ianic/zig/io_uring/loop/src/loop.zig:72:57: 0x22502b in run (test)
+            const completed = try self.flush_completions(0);
+                                                        ^
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/Thread.zig:433:13: 0x249b6b in callFn__anon_7160 (test)
+            @call(.auto, f, args) catch |err| {
+            ^
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/Thread.zig:1210:30: 0x22b293 in entryFn (test)
+                return callFn(f, self.fn_args);
+                             ^
+???:?:?: 0x28b0bb in ??? (???)
+???:?:?: 0xffffe6de74ef in ??? (???)
+???:?:?: 0xffffe6deef87 in ??? (???)
+error: the following test command crashed:
+/home/ianic/zig/io_uring/loop/zig-cache/o/dc6f017e6b76bd7baf0ec1139d3ce4d4/test
+
