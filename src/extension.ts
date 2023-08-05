@@ -202,13 +202,21 @@ function getEnv(findCurrentTest: boolean = true) {
 	};
 }
 
-// run zig binary with args 
+// run zig binary with args
 function runZig(args: string[], cwd: string, successCallback?: () => void) {
 	diagnosticCollection.clear();
 
 	// get zig binary from zig extension configuration
 	const zigConfig = vscode.workspace.getConfiguration('zig');
 	const zigPath = zigConfig.get<string>("zigPath") || "zig";
+
+	if (args[0] === "test") {
+		// append additional test arguments if set in configuration
+		const testArgs = getTestArgs();
+		if (testArgs) {
+			args = [args[0], testArgs.split(" "), args.splice(1)].flat();
+		}
+	}
 
 	// show running command in output (so can be analyzed or copied to terminal)
 	output.appendLine("Running: zig " + quote(args).join(' '));
@@ -242,7 +250,13 @@ function runZig(args: string[], cwd: string, successCallback?: () => void) {
 	});
 }
 
-// Find test name to run. 
+function getTestArgs() {
+	const config = vscode.workspace.getConfiguration('zig-language-extras');
+	return config.get<string>("testArgs") || undefined;
+}
+
+
+// Find test name to run.
 // Look up from the current line, if not found than
 // look down from the current line.
 function findTest(editor: vscode.TextEditor) {

@@ -1,4 +1,4 @@
-# Zig Language Extras 
+# Zig Language Extras
 
 This extension adds few
 [commands](https://github.com/ianic/zig-language-extras/blob/de59f5422a73d976fa47961fb2cb0974037687b4/package.json#L34)
@@ -29,7 +29,7 @@ description from zig command output. When running tests there can be few
 different versions of the output. Build can fail, test can fail, assert can be
 risen while running the test. All of those have different output and it is hard
 to make single regexp which will work for all. So I make it more procedural way
-by analyzing zig command output line by line. 
+by analyzing zig command output line by line.
 
 Most of the commands are expecting folder structure built with 'zig init-exe' or
 'zig init-lib'. With build.zig in the root and files under src. Folder with the
@@ -46,14 +46,23 @@ on tests definition in your build.zig
 searches up from the current position to find name of the test. If not found
 then it searches down. If you are positioned in the test, that will run that
 test. If you are in the code and the tests are below you code this will find
-first test. 
+first test.
+
+
+If you need to use additional test command arguments set `testArgs` variable in workspace config.
+For example in a project which depends on zlib I'm using this config:
+```json
+{
+    "zig-language-extras.testArgs": "--deps zlib=zlib --mod zlib::../zig-zlib/src/main.zig --library z",
+}
+```
 ## Building
 
-'Build workspace' command runs `zig build` in the root of the workspace. 
+'Build workspace' command runs `zig build` in the root of the workspace.
 
 ## Debugging
 
-There are two debugging commands. 
+There are two debugging commands.
 
 'Debug test' builds binary for the test (binary location: zig-out/debug/test)
 and starts debugger on that binary. Put a breakpoint in you test before running
@@ -99,7 +108,7 @@ Parser has no dependency on vscode so it is possible to test without running vsc
 mocha -ui tdd out/test/suite/parser.test.js
 ```
 
-## Credits 
+## Credits
 
 Code lenses implementation is taken from Jarred-Sumner's [pull
 request](https://github.com/ziglang/vscode-zig/pull/57/files) to original
@@ -107,7 +116,7 @@ vscode-zig extension.
 
 <!--
   ### Notes to myself
-  [vscode extensions docs](https://code.visualstudio.com/api/get-started/extension-anatomy)   
-  [extension samples](https://github.com/microsoft/vscode-extension-samples/tree/main)  
-  [publishing extension](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)  
+  [vscode extensions docs](https://code.visualstudio.com/api/get-started/extension-anatomy)
+  [extension samples](https://github.com/microsoft/vscode-extension-samples/tree/main)
+  [publishing extension](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)
 -->
