@@ -78,7 +78,7 @@ function debugTest(testName: string | undefined) {
 	const binPath = debugEnv.testBinaryPath;
 	mkdirp(path.resolve(env.cwd, binPath)); // ensure that output directory exists
 
-	const args: string[] = ["test", "--test-filter", testName, env.fileNameRelative, "-femit-bin=" + binPath];
+	const args: string[] = ["test", "--test-filter", testName, env.fileNameRelative, "-femit-bin=" + binPath, "--test-no-exec"];
 	runZig(args, env.cwd, () => {
 		output.appendLine("Debugging binary " + binPath);
 		startDebugging(env.workspaceFolder, binPath);
