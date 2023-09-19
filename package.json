@@ -2,7 +2,7 @@
   "name": "zig-language-extras",
   "displayName": "Zig Language Extras",
   "description": "Commands for testing and debugging Zig Language files/projects",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "repository": "https://github.com/ianic/zig-language-extras.git",
   "publisher": "ianic",
   "extensionDependencies": [
