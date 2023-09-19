@@ -1,0 +1,31 @@
+Running: zig test --test-filter "connects and waits" src/tcp_echo_test.zig
+
+1/1 test.connects and waits... thread 814883 panic: reached unreachable code
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/debug.zig:258:14: 0x21cb63 in assert (test)
+    if (!ok) unreachable; // assertion failure
+             ^
+/home/ianic/zig/io_uring/loop/src/tcp.zig:290:15: 0x2232a3 in shutdown (test)
+        assert(self.completion.args == .send);
+              ^
+/home/ianic/zig/io_uring/loop/src/tcp.zig:201:29: 0x22086f in shutdown (test)
+        self.writer.shutdown();
+                            ^
+/home/ianic/zig/io_uring/loop/src/tcp_echo_test.zig:390:32: 0x2204bb in test.connects and waits (test)
+    server.conn.stream.shutdown();
+                               ^
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/test_runner.zig:175:28: 0x24532b in mainTerminal (test)
+        } else test_fn.func();
+                           ^
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/test_runner.zig:35:28: 0x223eff in main (test)
+        return mainTerminal();
+                           ^
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig:598:22: 0x220dd3 in posixCallMainAndExit (test)
+            root.main();
+                     ^
+/usr/local/zig/zig-linux-aarch64-0.11.0-dev.3886+0c1bfe271/lib/std/start.zig:367:5: 0x220987 in _start (test)
+    @call(.never_inline, posixCallMainAndExit, .{});
+    ^
+error: the following test command crashed:
+/home/ianic/zig/io_uring/loop/zig-cache/o/6452d5d36c12d85ca07bd5bc9c15289a/test
+
+
