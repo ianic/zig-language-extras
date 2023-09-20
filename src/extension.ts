@@ -79,9 +79,10 @@ function debugTest(testName: string | undefined) {
 	mkdirp(path.resolve(env.cwd, binPath)); // ensure that output directory exists
 
 	const args: string[] = ["test", "--test-filter", testName, env.fileNameRelative, "-femit-bin=" + binPath, "--test-no-exec"];
+	const debugType = getDebugType();
 	runZig(args, env.cwd, () => {
-		output.appendLine("Debugging binary " + binPath);
-		startDebugging(env.workspaceFolder, binPath);
+		output.appendLine(`Debugging binary ${binPath} with type=${debugType}`);
+		startDebugging(env.workspaceFolder, binPath, debugType);
 	});
 }
 
@@ -92,23 +93,24 @@ function debugBinary() {
 	const binPath = path.join("zig-out", "bin", env.binName);
 
 	const args: string[] = ["build"];
+	const debugType = getDebugType();
 	runZig(args, env.cwd, () => {
-		output.appendLine("Debugging binary " + binPath);
-		startDebugging(env.workspaceFolder, binPath);
+		output.appendLine(`Debugging binary ${binPath} with type=${debugType}`);
+		startDebugging(env.workspaceFolder, binPath, debugType);
 	});
 }
 
-
-function startDebugging(wf: vscode.WorkspaceFolder, binPath: string) {
-	const isDarwin = os.platform() === "darwin";
+function startDebugging(wf: vscode.WorkspaceFolder, binPath: string, debugType: string) {
 	let launchConfig = {
 		"name": "ZigDebugBinary",
-		"type": isDarwin ? "lldb" : "gdb",
+		"type": debugType,
 		"request": "launch",
 		"target": binPath,
 		"program": binPath,
 		"cwd": "${workspaceRoot}",
 	};
+
+
 	vscode.debug.startDebugging(wf, launchConfig);
 }
 
@@ -255,6 +257,24 @@ function getTestArgs() {
 	return config.get<string>("testArgs") || undefined;
 }
 
+function getDebugType(): string {
+	const config = vscode.workspace.getConfiguration('zig-language-extras');
+	return config.get<string>("debugType") || getDebugTypeForPlatform(os.platform());
+}
+
+/**
+ * Returns default debug type for the given platform.
+ */
+function getDebugTypeForPlatform(platform: NodeJS.Platform): string {
+	switch (platform) {
+		case "darwin":
+			return "lldb";
+		case "win32":
+			return "cppvsdbg";
+		default:
+			return "gdb";
+	}
+}
 
 // Find test name to run.
 // Look up from the current line, if not found than

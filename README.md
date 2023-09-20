@@ -13,15 +13,15 @@ for Zig development:
 It also displays code lenses above tests to run or debug single test, and code
 lens at the first line of the file to run all tests.
 
-It
-[depends](https://github.com/ianic/zig-language-extras/blob/de59f5422a73d976fa47961fb2cb0974037687b4/package.json#L8)
-on three other extensions.
-[Zig Language](https://marketplace.visualstudio.com/items?itemName=ziglang.vscode-zig)
-for location of Zig binary. [Native
-Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) for
-launching debugger on Linux and
-[CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
-for debugging on MacOS.
+It [depends](package.json#L8) on several extensions:
+
+- [Zig Language](https://marketplace.visualstudio.com/items?itemName=ziglang.vscode-zig)
+for location of Zig binary
+- [Native Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) for
+debugging on Linux
+- [CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
+for debugging on MacOS
+- [C/C++](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb) for debugging on Windows
 
 
 The main reason I decided to make this is to create fine vscode problems
@@ -74,6 +74,13 @@ which is expected to be root of your workspace. If the current file is in some
 other folder then the name of the current file is used as name of the binary
 except if that file is named main.zig then folder name of that file is used as
 expected binary name.
+
+You can modify debugger via settings: `"zig-language-extras.debugType": "type"`. Type refers to the specific `"type"` field that you would use in the launch.json file.
+
+The default debugger types for each platform are as follows:
+- "lldb" for darwin platform
+- "cppvsdbg" for win32 platform
+- "gdb" for other platforms
 
 ## Keybinding tip
 
