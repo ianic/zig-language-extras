@@ -13,7 +13,7 @@ for Zig development:
 It also displays code lenses above tests to run or debug single test, and code
 lens at the first line of the file to run all tests.
 
-It [depends](package.json#L8) on several extensions:
+It depends on several extensions:
 
 - [Zig Language](https://marketplace.visualstudio.com/items?itemName=ziglang.vscode-zig)
 for location of Zig binary
