@@ -221,7 +221,7 @@ function runZig(args: string[], cwd: string, successCallback?: () => void) {
 	}
 
 	// show running command in output (so can be analyzed or copied to terminal)
-	output.appendLine("Running: zig " + quote(args).join(' '));
+	output.appendLine(`Running: ${zigPath} ` + quote(args).join(' '));
 
 	cp.execFile(zigPath, args, { cwd }, (err, stdout, stderr) => {
 		if (stderr.trim().length > 0) {
