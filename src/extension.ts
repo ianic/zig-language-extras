@@ -210,7 +210,7 @@ function runZig(args: string[], cwd: string, successCallback?: () => void) {
 
 	// get zig binary from zig extension configuration
 	const zigConfig = vscode.workspace.getConfiguration('zig');
-	const zigPath = zigConfig.get<string>("zigPath") || "zig";
+	const zigPath = zigConfig.get<string>("path") || "zig";
 
 	if (args[0] === "test") {
 		// append additional test arguments if set in configuration
@@ -221,7 +221,7 @@ function runZig(args: string[], cwd: string, successCallback?: () => void) {
 	}
 
 	// show running command in output (so can be analyzed or copied to terminal)
-	output.appendLine("Running: zig " + quote(args).join(' '));
+	output.appendLine(`Running: ${zigPath} ` + quote(args).join(' '));
 
 	cp.execFile(zigPath, args, { cwd }, (err, stdout, stderr) => {
 		if (stderr.trim().length > 0) {
