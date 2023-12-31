@@ -181,7 +181,7 @@ function getEnv(findCurrentTest: boolean = true) {
 
 	// binary name from the current file
 	let binName = path.parse(fileNameRelative).name;
-	if (binName === "main.zig") {
+	if (binName === "main") {
 		// for main.zig use name of the directory in the file path excluding src
 		const dirs = path.dirname(fileName).split(path.sep);
 		binName = dirs.reverse().find((dir) => {
