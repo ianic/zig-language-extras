@@ -282,7 +282,7 @@ function getDebugTypeForPlatform(platform: NodeJS.Platform): string {
 function findTest(editor: vscode.TextEditor) {
 	const activeLine = editor.selection.active.line;
 	const lineCount = editor.document.lineCount;
-	const re = /^test\s+"(.*)"\s+{/;
+	const re = /\btest\b\s*(?:"?(.*?)"?\s*){/;
 
 	// go up line by line
 	for (var lineNo = activeLine; lineNo >= 0; lineNo--) {
